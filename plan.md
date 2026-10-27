@@ -291,7 +291,7 @@ flutter build apk --release --split-per-abi
 Every box below is one unit of work. Tick `[x]` as it lands. Sections 0–10 above are the
 spec these tasks implement — the checklist is the only place that tracks progress.
 
-**Progress:** 31 / 132 done · current milestone: M5
+**Progress:** 32 / 132 done · current milestone: M5
 
 ### M0 — Environment and project setup
 
@@ -372,7 +372,7 @@ spec these tasks implement — the checklist is the only place that tracks progr
 ### M5 — Animation pass
 
 - [x] Staggered list entrance: fade + 12px slide-up, 40ms/item, capped at 10
-- [ ] FAB → editor sheet container transform (`OpenContainer`)
+- [x] FAB → editor sheet container transform (`OpenContainer`)
 - [x] `animated_checkbox.dart` — ring scale + path-trace check draw
 - [x] Completion: card desaturate + animated strike-through + light haptic
 - [ ] Card animates out to the Done group on completion

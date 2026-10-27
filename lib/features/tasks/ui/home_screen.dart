@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:animations/animations.dart';
 import 'package:intl/intl.dart';
 import 'package:todo/core/theme/app_colors.dart';
 import 'package:todo/core/theme/motion.dart';
@@ -124,14 +125,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          builder: (sheetContext) => const TaskEditorSheet(),
+      floatingActionButton: OpenContainer<void>(
+        transitionDuration: AppMotion.duration(context, AppMotion.base),
+        closedColor: theme.colorScheme.primary,
+        openColor: theme.scaffoldBackgroundColor,
+        closedElevation: 6,
+        openElevation: 0,
+        closedShape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(16)),
         ),
-        icon: const Icon(Icons.add),
-        label: const Text('Add task'),
+        openBuilder: (context, closeContainer) => Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          body: Align(
+            alignment: Alignment.bottomCenter,
+            child: const TaskEditorSheet(),
+          ),
+        ),
+        closedBuilder: (context, openContainer) =>
+            FloatingActionButton.extended(
+              onPressed: openContainer,
+              icon: const Icon(Icons.add),
+              label: const Text('Add task'),
+            ),
       ),
     );
   }
