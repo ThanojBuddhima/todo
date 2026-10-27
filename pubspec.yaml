@@ -19,6 +19,7 @@ dependencies:
   path: ^1.9.1
   google_fonts: ^6.2.1
   animations: ^2.0.11
+  flutter_slidable: ^4.0.3
 
 dev_dependencies:
   flutter_test:

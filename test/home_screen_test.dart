@@ -119,6 +119,62 @@ void main() {
     expect(find.byType(DraggableScrollableSheet), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('swiping right reveals complete action', (tester) async {
+    final task = _task('swipe-complete', 'Swipe to complete');
+    final dao = _FakeTaskDao();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          taskDaoProvider.overrideWithValue(dao),
+          tasksProvider.overrideWith((ref) async => [task]),
+          filteredTasksProvider.overrideWith((ref) async => [task]),
+          categoriesProvider.overrideWith((ref) async => []),
+          subtasksProvider(task.id).overrideWith((ref) async => const []),
+        ],
+        child: const MaterialApp(home: HomeScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.drag(find.text('Swipe to complete'), const Offset(450, 0));
+    await tester.pumpAndSettle();
+    expect(find.text('Complete'), findsOneWidget);
+    await tester.tap(find.text('Complete'));
+    await tester.pumpAndSettle();
+
+    expect(dao.toggledTaskId, task.id);
+  });
+
+  testWidgets('swiping left reveals delete action and undo', (tester) async {
+    final task = _task('swipe-delete', 'Swipe to delete');
+    final dao = _FakeTaskDao();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          taskDaoProvider.overrideWithValue(dao),
+          tasksProvider.overrideWith((ref) async => [task]),
+          filteredTasksProvider.overrideWith((ref) async => [task]),
+          categoriesProvider.overrideWith((ref) async => []),
+          subtasksProvider(task.id).overrideWith((ref) async => const []),
+        ],
+        child: const MaterialApp(home: HomeScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.drag(find.text('Swipe to delete'), const Offset(-450, 0));
+    await tester.pumpAndSettle();
+    expect(find.text('Delete'), findsOneWidget);
+    await tester.tap(find.text('Delete'));
+    await tester.pumpAndSettle();
+
+    expect(dao.deletedTaskId, task.id);
+    expect(find.text('Task deleted'), findsOneWidget);
+    await tester.tap(find.text('Undo'));
+    await tester.pumpAndSettle();
+    expect(dao.restoredTaskId, task.id);
+  });
 }
 
 Task _task(String id, String title, {int? dueAt, bool isDone = false}) {
@@ -138,6 +194,12 @@ Task _task(String id, String title, {int? dueAt, bool isDone = false}) {
 class _FakeTaskDao extends TaskDao {
   String? deletedTaskId;
   String? restoredTaskId;
+  String? toggledTaskId;
+
+  @override
+  Future<void> toggleDone(String taskId) async {
+    toggledTaskId = taskId;
+  }
 
   @override
   Future<void> softDelete(String taskId) async {

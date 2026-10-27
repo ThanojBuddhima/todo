@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:animations/animations.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 import 'package:todo/core/theme/app_colors.dart';
 import 'package:todo/core/theme/motion.dart';
@@ -275,123 +276,175 @@ class _TaskCard extends ConsumerWidget {
       duration: AppMotion.duration(context, AppMotion.base),
       builder: (context, desaturation, child) => ColorFiltered(
         colorFilter: _desaturationFilter(desaturation),
-        child: Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(12),
-            onTap: () async {
-              final deletedTaskId = await Navigator.of(context).push<String>(
-                MaterialPageRoute(
-                  builder: (_) => TaskDetailScreen(taskId: task.id),
-                ),
-              );
-              if (deletedTaskId == null || !context.mounted) return;
-
-              ref.invalidate(tasksProvider);
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  SnackBar(
-                    content: const Text('Task deleted'),
-                    action: SnackBarAction(
-                      label: 'Undo',
-                      onPressed: () async {
-                        try {
-                          await ref
-                              .read(taskDaoProvider)
-                              .restoreTask(deletedTaskId);
-                          ref.invalidate(tasksProvider);
-                        } catch (error) {
-                          if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Could not restore task: $error'),
-                            ),
-                          );
-                        }
-                      },
-                    ),
+        child: Slidable(
+          key: ValueKey('slidable-${task.id}'),
+          startActionPane: ActionPane(
+            motion: const DrawerMotion(),
+            extentRatio: 0.25,
+            children: [
+              SlidableAction(
+                onPressed: (_) => _toggleTask(context, ref),
+                backgroundColor: AppColors.done,
+                foregroundColor: Colors.white,
+                icon: task.isDone ? Icons.undo : Icons.check,
+                label: task.isDone ? 'Reopen' : 'Complete',
+              ),
+            ],
+          ),
+          endActionPane: ActionPane(
+            motion: const DrawerMotion(),
+            extentRatio: 0.25,
+            children: [
+              SlidableAction(
+                onPressed: (_) => _deleteTask(context, ref),
+                backgroundColor: Theme.of(context).colorScheme.error,
+                foregroundColor: Theme.of(context).colorScheme.onError,
+                icon: Icons.delete_outline,
+                label: 'Delete',
+              ),
+            ],
+          ),
+          child: Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () async {
+                final deletedTaskId = await Navigator.of(context).push<String>(
+                  MaterialPageRoute(
+                    builder: (_) => TaskDetailScreen(taskId: task.id),
                   ),
                 );
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  Container(
-                    width: 4,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: color,
-                      borderRadius: BorderRadius.circular(99),
+                if (deletedTaskId != null && context.mounted) {
+                  await _showUndo(context, ref, deletedTaskId);
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 4,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: color,
+                        borderRadius: BorderRadius.circular(99),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        AnimatedDefaultTextStyle(
-                          duration: AppMotion.duration(context, AppMotion.base),
-                          curve: AppMotion.emphasized,
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                decoration: task.isDone
-                                    ? TextDecoration.lineThrough
-                                    : null,
-                                color: task.isDone
-                                    ? Theme.of(
-                                        context,
-                                      ).colorScheme.onSurfaceVariant
-                                    : null,
-                              ) ??
-                              const TextStyle(),
-                          child: Text(task.title),
-                        ),
-                        if (task.notes?.isNotEmpty ?? false) ...[
-                          const SizedBox(height: 6),
-                          Text(
-                            task.notes!,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                        if (task.dueAt != null) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            DateFormat('MMM d, y').format(
-                              DateTime.fromMillisecondsSinceEpoch(task.dueAt!),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AnimatedDefaultTextStyle(
+                            duration: AppMotion.duration(
+                              context,
+                              AppMotion.base,
                             ),
-                            style: Theme.of(context).textTheme.labelMedium,
+                            curve: AppMotion.emphasized,
+                            style:
+                                Theme.of(
+                                  context,
+                                ).textTheme.titleMedium?.copyWith(
+                                  decoration: task.isDone
+                                      ? TextDecoration.lineThrough
+                                      : null,
+                                  color: task.isDone
+                                      ? Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant
+                                      : null,
+                                ) ??
+                                const TextStyle(),
+                            child: Text(task.title),
                           ),
+                          if (task.notes?.isNotEmpty ?? false) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              task.notes!,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                          if (task.dueAt != null) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              DateFormat('MMM d, y').format(
+                                DateTime.fromMillisecondsSinceEpoch(
+                                  task.dueAt!,
+                                ),
+                              ),
+                              style: Theme.of(context).textTheme.labelMedium,
+                            ),
+                          ],
+                          _SubtaskProgress(taskId: task.id),
                         ],
-                        _SubtaskProgress(taskId: task.id),
-                      ],
+                      ),
                     ),
-                  ),
-                  AnimatedCheckbox(
-                    value: task.isDone,
-                    onChanged: (isDone) async {
-                      try {
-                        await ref.read(taskDaoProvider).toggleDone(task.id);
-                        ref.invalidate(tasksProvider);
-                      } catch (error) {
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Could not update task: $error'),
-                          ),
-                        );
-                      }
-                    },
-                  ),
-                ],
+                    AnimatedCheckbox(
+                      value: task.isDone,
+                      onChanged: (_) => _toggleTask(context, ref),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _toggleTask(BuildContext context, WidgetRef ref) async {
+    try {
+      await ref.read(taskDaoProvider).toggleDone(task.id);
+      ref.invalidate(tasksProvider);
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not update task: $error')));
+    }
+  }
+
+  Future<void> _deleteTask(BuildContext context, WidgetRef ref) async {
+    try {
+      await ref.read(taskDaoProvider).softDelete(task.id);
+      ref.invalidate(tasksProvider);
+      if (context.mounted) await _showUndo(context, ref, task.id);
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not delete task: $error')));
+    }
+  }
+
+  Future<void> _showUndo(
+    BuildContext context,
+    WidgetRef ref,
+    String taskId,
+  ) async {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: const Text('Task deleted'),
+          action: SnackBarAction(
+            label: 'Undo',
+            onPressed: () async {
+              try {
+                await ref.read(taskDaoProvider).restoreTask(taskId);
+                ref.invalidate(tasksProvider);
+              } catch (error) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Could not restore task: $error')),
+                );
+              }
+            },
+          ),
+        ),
+      );
   }
 
   ColorFilter _desaturationFilter(double amount) {
