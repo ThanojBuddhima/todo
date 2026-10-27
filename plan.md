@@ -291,7 +291,7 @@ flutter build apk --release --split-per-abi
 Every box below is one unit of work. Tick `[x]` as it lands. Sections 0–10 above are the
 spec these tasks implement — the checklist is the only place that tracks progress.
 
-**Progress:** 33 / 132 done · current milestone: M5
+**Progress:** 35 / 132 done · current milestone: M5
 
 ### M0 — Environment and project setup
 
@@ -378,9 +378,9 @@ spec these tasks implement — the checklist is the only place that tracks progr
 - [ ] Card animates out to the Done group on completion
 - [ ] `ReorderableListView` with lift animation (scale 1.03 + shadow)
 - [x] `flutter_slidable`: swipe right → complete, swipe left → delete
-- [ ] Card → task detail container transform
+- [x] Card → task detail container transform
 - [x] Stat counts tween on change; progress ring animates
-- [ ] Reduced motion collapses all durations to zero
+- [x] Reduced motion collapses all durations to zero
 - [ ] **Verify:** 60fps in profile mode on a real device, long list scrolled hard
 
 ### M6 — History timeline

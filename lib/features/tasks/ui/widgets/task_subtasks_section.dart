@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:todo/core/theme/motion.dart';
 import 'package:todo/features/tasks/domain/subtask.dart';
 import 'package:todo/features/tasks/providers/task_providers.dart';
 import 'package:todo/features/tasks/ui/widgets/subtask_tile.dart';
@@ -54,7 +55,10 @@ class _TaskSubtasksSectionState extends ConsumerState<TaskSubtasksSection> {
                 const SizedBox(width: 8),
                 TweenAnimationBuilder<double>(
                   tween: Tween(begin: 0, end: progress),
-                  duration: const Duration(milliseconds: 300),
+                  duration: AppMotion.duration(
+                    context,
+                    const Duration(milliseconds: 300),
+                  ),
                   builder: (context, value, child) => SizedBox(
                     width: 30,
                     height: 30,

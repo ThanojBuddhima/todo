@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:todo/core/theme/motion.dart';
 import 'package:todo/features/tasks/domain/task_filter.dart';
 
 class EmptyState extends StatefulWidget {
@@ -26,7 +27,7 @@ class _EmptyStateState extends State<EmptyState> {
     final (title, message) = _copyForFilter(widget.filter);
     return AnimatedOpacity(
       opacity: _visible ? 1 : 0,
-      duration: const Duration(milliseconds: 250),
+      duration: AppMotion.duration(context, AppMotion.base),
       child: Card(
         child: Padding(
           padding: const EdgeInsets.all(32),

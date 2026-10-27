@@ -272,7 +272,7 @@ class _TaskCard extends ConsumerWidget {
     };
 
     return TweenAnimationBuilder<double>(
-      tween: Tween(begin: task.isDone ? 1 : 0, end: task.isDone ? 1 : 0),
+      tween: Tween(begin: 0, end: task.isDone ? 1.0 : 0.0),
       duration: AppMotion.duration(context, AppMotion.base),
       builder: (context, desaturation, child) => ColorFiltered(
         colorFilter: _desaturationFilter(desaturation),
@@ -310,8 +310,25 @@ class _TaskCard extends ConsumerWidget {
               borderRadius: BorderRadius.circular(12),
               onTap: () async {
                 final deletedTaskId = await Navigator.of(context).push<String>(
-                  MaterialPageRoute(
-                    builder: (_) => TaskDetailScreen(taskId: task.id),
+                  PageRouteBuilder<String>(
+                    transitionDuration: AppMotion.duration(
+                      context,
+                      AppMotion.base,
+                    ),
+                    reverseTransitionDuration: AppMotion.duration(
+                      context,
+                      AppMotion.base,
+                    ),
+                    pageBuilder: (context, animation, secondaryAnimation) =>
+                        TaskDetailScreen(taskId: task.id),
+                    transitionsBuilder:
+                        (context, animation, secondaryAnimation, child) =>
+                            SharedAxisTransition(
+                              animation: animation,
+                              secondaryAnimation: secondaryAnimation,
+                              transitionType: SharedAxisTransitionType.scaled,
+                              child: child,
+                            ),
                   ),
                 );
                 if (deletedTaskId != null && context.mounted) {

@@ -23,7 +23,7 @@ class _StaggeredTaskEntranceState extends State<StaggeredTaskEntrance>
   late final Animation<double> _opacity;
   late final Animation<Offset> _offset;
   Timer? _delay;
-  bool _started = false;
+  bool? _reducedMotion;
 
   @override
   void initState() {
@@ -43,17 +43,18 @@ class _StaggeredTaskEntranceState extends State<StaggeredTaskEntrance>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_started) return;
-    _started = true;
-    if (AppMotion.reduced(context)) {
+    final reduceMotion = AppMotion.reduced(context);
+    if (_reducedMotion == reduceMotion) return;
+    _reducedMotion = reduceMotion;
+    if (reduceMotion) {
+      _delay?.cancel();
       _controller.value = 1;
-      return;
+    } else {
+      final delayMilliseconds = widget.index.clamp(0, 9).toInt() * 40;
+      _delay = Timer(Duration(milliseconds: delayMilliseconds), () {
+        if (mounted) _controller.forward();
+      });
     }
-
-    final delayMilliseconds = widget.index.clamp(0, 9).toInt() * 40;
-    _delay = Timer(Duration(milliseconds: delayMilliseconds), () {
-      if (mounted) _controller.forward();
-    });
   }
 
   @override
@@ -65,6 +66,9 @@ class _StaggeredTaskEntranceState extends State<StaggeredTaskEntrance>
 
   @override
   Widget build(BuildContext context) {
+    if (AppMotion.reduced(context)) {
+      return widget.child;
+    }
     return FadeTransition(
       opacity: _opacity,
       child: SlideTransition(position: _offset, child: widget.child),

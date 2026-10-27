@@ -5,6 +5,7 @@ import 'package:todo/features/tasks/data/task_dao.dart';
 import 'package:todo/features/tasks/domain/task.dart';
 import 'package:todo/features/tasks/providers/task_providers.dart';
 import 'package:todo/features/tasks/ui/home_screen.dart';
+import 'package:todo/features/tasks/ui/task_detail_screen.dart';
 
 void main() {
   testWidgets('groups tasks by due date and collapses the done group', (
@@ -174,6 +175,65 @@ void main() {
     await tester.tap(find.text('Undo'));
     await tester.pumpAndSettle();
     expect(dao.restoredTaskId, task.id);
+  });
+
+  testWidgets('task card opens detail with a shared-axis transition', (
+    tester,
+  ) async {
+    final task = _task('transition-task', 'Open task detail');
+    final dao = _FakeTaskDao();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          taskDaoProvider.overrideWithValue(dao),
+          tasksProvider.overrideWith((ref) async => [task]),
+          filteredTasksProvider.overrideWith((ref) async => [task]),
+          taskByIdProvider(task.id).overrideWith((ref) async => task),
+          categoriesProvider.overrideWith((ref) async => []),
+          subtasksProvider(task.id).overrideWith((ref) async => const []),
+          taskActivityProvider(task.id).overrideWith((ref) async => const []),
+        ],
+        child: const MaterialApp(home: HomeScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Open task detail'));
+    await tester.pump(const Duration(milliseconds: 100));
+
+    await tester.pumpAndSettle();
+    expect(find.byType(TaskDetailScreen), findsOneWidget);
+    expect(find.text('Task details'), findsOneWidget);
+  });
+
+  testWidgets('reduced motion skips staggered task entrance animation', (
+    tester,
+  ) async {
+    final tasks = [
+      _task('motion-one', 'First motion task'),
+      _task('motion-two', 'Second motion task'),
+    ];
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          tasksProvider.overrideWith((ref) async => tasks),
+          filteredTasksProvider.overrideWith((ref) async => tasks),
+          categoriesProvider.overrideWith((ref) async => []),
+          for (final task in tasks)
+            subtasksProvider(task.id).overrideWith((ref) async => const []),
+        ],
+        child: MaterialApp(
+          home: MediaQuery(
+            data: const MediaQueryData(disableAnimations: true),
+            child: const HomeScreen(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('First motion task'), findsOneWidget);
+    expect(find.text('Second motion task'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }
 
