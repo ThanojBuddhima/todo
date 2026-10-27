@@ -291,7 +291,7 @@ flutter build apk --release --split-per-abi
 Every box below is one unit of work. Tick `[x]` as it lands. Sections 0–10 above are the
 spec these tasks implement — the checklist is the only place that tracks progress.
 
-**Progress:** 43 / 132 done · current milestone: M6
+**Progress:** 45 / 132 done · current milestone: M7
 
 ### M0 — Environment and project setup
 
@@ -390,8 +390,8 @@ spec these tasks implement — the checklist is the only place that tracks progr
 - [x] `history_screen.dart` — reverse-chronological list with sticky day headers
 - [x] Date-range filter UI
 - [x] Action-type filter
-- [ ] Pagination or lazy loading for a long log
-- [ ] **Verify:** exercise all 15 action types and confirm each renders correctly
+- [x] Pagination or lazy loading for a long log
+- [x] **Verify:** exercise all 15 action types and confirm each renders correctly
 
 ### M7 — PDF activity report
 
