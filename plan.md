@@ -291,7 +291,7 @@ flutter build apk --release --split-per-abi
 Every box below is one unit of work. Tick `[x]` as it lands. Sections 0–10 above are the
 spec these tasks implement — the checklist is the only place that tracks progress.
 
-**Progress:** 39 / 132 done · current milestone: M6
+**Progress:** 40 / 132 done · current milestone: M6
 
 ### M0 — Environment and project setup
 
@@ -386,7 +386,7 @@ spec these tasks implement — the checklist is the only place that tracks progr
 ### M6 — History timeline
 
 - [x] `activity_providers.dart` — range-filtered log stream
-- [ ] `timeline_tile.dart` — action icon, colored chip, task title, old → new change
+- [x] `timeline_tile.dart` — action icon, colored chip, task title, old → new change
 - [ ] `history_screen.dart` — reverse-chronological list with sticky day headers
 - [ ] Date-range filter UI
 - [ ] Action-type filter
