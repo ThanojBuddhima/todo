@@ -245,89 +245,117 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 }
 
-class _TaskCard extends ConsumerWidget {
+class _TaskCard extends ConsumerStatefulWidget {
   const _TaskCard({required this.task});
 
   final Task task;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Slidable(
-      key: ValueKey('slidable-${task.id}'),
-      startActionPane: ActionPane(
-        motion: const DrawerMotion(),
-        extentRatio: 0.25,
-        children: [
-          SlidableAction(
-            onPressed: (_) => _toggleTask(context, ref),
-            backgroundColor: AppColors.done,
-            foregroundColor: Colors.white,
-            icon: task.isDone ? Icons.undo : Icons.check,
-            label: task.isDone ? 'Reopen' : 'Complete',
-          ),
-        ],
-      ),
-      endActionPane: ActionPane(
-        motion: const DrawerMotion(),
-        extentRatio: 0.25,
-        children: [
-          SlidableAction(
-            onPressed: (_) => _deleteTask(context, ref),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            foregroundColor: Theme.of(context).colorScheme.onError,
-            icon: Icons.delete_outline,
-            label: 'Delete',
-          ),
-        ],
-      ),
-      child: TaskCard(
-        task: task,
-        onTap: () async {
-          final deletedTaskId = await Navigator.of(context).push<String>(
-            PageRouteBuilder<String>(
-              transitionDuration: AppMotion.duration(context, AppMotion.base),
-              reverseTransitionDuration: AppMotion.duration(
-                context,
-                AppMotion.base,
+  ConsumerState<_TaskCard> createState() => _TaskCardState();
+}
+
+class _TaskCardState extends ConsumerState<_TaskCard> {
+  bool _isExiting = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final task = widget.task;
+    return AnimatedSize(
+      duration: AppMotion.duration(context, AppMotion.base),
+      curve: AppMotion.emphasized,
+      alignment: Alignment.topCenter,
+      child: _isExiting
+          ? const SizedBox.shrink()
+          : Slidable(
+              key: ValueKey('slidable-${task.id}'),
+              startActionPane: ActionPane(
+                motion: const DrawerMotion(),
+                extentRatio: 0.25,
+                children: [
+                  SlidableAction(
+                    onPressed: (_) => _toggleTask(),
+                    backgroundColor: AppColors.done,
+                    foregroundColor: Colors.white,
+                    icon: task.isDone ? Icons.undo : Icons.check,
+                    label: task.isDone ? 'Reopen' : 'Complete',
+                  ),
+                ],
               ),
-              pageBuilder: (context, animation, secondaryAnimation) =>
-                  TaskDetailScreen(taskId: task.id),
-              transitionsBuilder:
-                  (context, animation, secondaryAnimation, child) =>
-                      SharedAxisTransition(
-                        animation: animation,
-                        secondaryAnimation: secondaryAnimation,
-                        transitionType: SharedAxisTransitionType.scaled,
-                        child: child,
-                      ),
+              endActionPane: ActionPane(
+                motion: const DrawerMotion(),
+                extentRatio: 0.25,
+                children: [
+                  SlidableAction(
+                    onPressed: (_) => _deleteTask(context),
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                    foregroundColor: Theme.of(context).colorScheme.onError,
+                    icon: Icons.delete_outline,
+                    label: 'Delete',
+                  ),
+                ],
+              ),
+              child: TaskCard(
+                task: task,
+                onTap: () async {
+                  final deletedTaskId = await Navigator.of(context)
+                      .push<String>(
+                        PageRouteBuilder<String>(
+                          transitionDuration: AppMotion.duration(
+                            context,
+                            AppMotion.base,
+                          ),
+                          reverseTransitionDuration: AppMotion.duration(
+                            context,
+                            AppMotion.base,
+                          ),
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) =>
+                                  TaskDetailScreen(taskId: task.id),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) =>
+                                  SharedAxisTransition(
+                                    animation: animation,
+                                    secondaryAnimation: secondaryAnimation,
+                                    transitionType:
+                                        SharedAxisTransitionType.scaled,
+                                    child: child,
+                                  ),
+                        ),
+                      );
+                  if (deletedTaskId != null && context.mounted) {
+                    await _showUndo(context, deletedTaskId);
+                  }
+                },
+                onToggle: (_) => _toggleTask(),
+              ),
             ),
-          );
-          if (deletedTaskId != null && context.mounted) {
-            await _showUndo(context, ref, deletedTaskId);
-          }
-        },
-        onToggle: (_) => _toggleTask(context, ref),
-      ),
     );
   }
 
-  Future<void> _toggleTask(BuildContext context, WidgetRef ref) async {
+  Future<void> _toggleTask() async {
+    if (!widget.task.isDone) {
+      setState(() => _isExiting = true);
+      await Future<void>.delayed(AppMotion.duration(context, AppMotion.base));
+      if (!mounted) return;
+    }
+
     try {
-      await ref.read(taskDaoProvider).toggleDone(task.id);
+      await ref.read(taskDaoProvider).toggleDone(widget.task.id);
       ref.invalidate(tasksProvider);
     } catch (error) {
-      if (!context.mounted) return;
+      if (!mounted) return;
+      setState(() => _isExiting = false);
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Could not update task: $error')));
     }
   }
 
-  Future<void> _deleteTask(BuildContext context, WidgetRef ref) async {
+  Future<void> _deleteTask(BuildContext context) async {
     try {
-      await ref.read(taskDaoProvider).softDelete(task.id);
+      await ref.read(taskDaoProvider).softDelete(widget.task.id);
       ref.invalidate(tasksProvider);
-      if (context.mounted) await _showUndo(context, ref, task.id);
+      if (context.mounted) await _showUndo(context, widget.task.id);
     } catch (error) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(
@@ -336,11 +364,7 @@ class _TaskCard extends ConsumerWidget {
     }
   }
 
-  Future<void> _showUndo(
-    BuildContext context,
-    WidgetRef ref,
-    String taskId,
-  ) async {
+  Future<void> _showUndo(BuildContext context, String taskId) async {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
@@ -363,5 +387,4 @@ class _TaskCard extends ConsumerWidget {
         ),
       );
   }
-
 }

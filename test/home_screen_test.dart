@@ -6,6 +6,7 @@ import 'package:todo/features/tasks/domain/task.dart';
 import 'package:todo/features/tasks/providers/task_providers.dart';
 import 'package:todo/features/tasks/ui/home_screen.dart';
 import 'package:todo/features/tasks/ui/task_detail_screen.dart';
+import 'package:todo/features/tasks/ui/widgets/animated_checkbox.dart';
 
 void main() {
   testWidgets('groups tasks by due date and collapses the done group', (
@@ -177,6 +178,36 @@ void main() {
     expect(dao.restoredTaskId, task.id);
   });
 
+  testWidgets('completing a task moves it into the collapsed Done group', (
+    tester,
+  ) async {
+    final dao = _MutableTaskDao([_task('move-to-done', 'Move to Done')]);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          taskDaoProvider.overrideWithValue(dao),
+          categoriesProvider.overrideWith((ref) async => []),
+          subtasksProvider(
+            'move-to-done',
+          ).overrideWith((ref) async => const []),
+        ],
+        child: const MaterialApp(home: HomeScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(AnimatedCheckbox));
+    await tester.pumpAndSettle();
+
+    expect(dao.tasks.single.isDone, isTrue);
+    expect(find.text('Move to Done'), findsNothing);
+    expect(find.text('Later'), findsNothing);
+
+    await tester.tap(find.text('Done').last);
+    await tester.pumpAndSettle();
+    expect(find.text('Move to Done'), findsOneWidget);
+  });
+
   testWidgets('task card opens detail with a shared-axis transition', (
     tester,
   ) async {
@@ -269,5 +300,36 @@ class _FakeTaskDao extends TaskDao {
   @override
   Future<void> restoreTask(String taskId) async {
     restoredTaskId = taskId;
+  }
+}
+
+class _MutableTaskDao extends TaskDao {
+  _MutableTaskDao(this.tasks);
+
+  final List<Task> tasks;
+
+  @override
+  Future<List<Task>> getTasks() async => tasks;
+
+  @override
+  Future<void> toggleDone(String taskId) async {
+    final index = tasks.indexWhere((task) => task.id == taskId);
+    final task = tasks[index];
+    tasks[index] = Task(
+      id: task.id,
+      title: task.title,
+      notes: task.notes,
+      categoryId: task.categoryId,
+      priority: task.priority,
+      dueAt: task.dueAt,
+      remindAt: task.remindAt,
+      notificationId: task.notificationId,
+      isDone: !task.isDone,
+      completedAt: task.completedAt,
+      createdAt: task.createdAt,
+      updatedAt: task.updatedAt,
+      sortIndex: task.sortIndex,
+      deletedAt: task.deletedAt,
+    );
   }
 }
