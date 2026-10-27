@@ -135,6 +135,7 @@ class PdfReportBuilder {
 
     document.addPage(
       pw.MultiPage(
+        maxPages: 100,
         theme: pw.ThemeData.withFont(
           base: pw.Font.helvetica(),
           bold: pw.Font.helveticaBold(),

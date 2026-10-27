@@ -1,8 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:printing/printing.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:todo/features/activity/providers/activity_providers.dart';
 import 'package:todo/features/activity/ui/widgets/timeline_tile.dart';
+import 'package:todo/features/export/ui/export_sheet.dart';
 import 'package:todo/features/tasks/domain/activity_action.dart';
 import 'package:todo/features/tasks/domain/activity_entry.dart';
 
@@ -21,21 +27,38 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   Widget build(BuildContext context) {
     final today = DateUtils.dateOnly(DateTime.now());
     final range = (
-      startAtInclusive:
-          _dateRange == null
-              ? 0
-              : DateUtils.dateOnly(_dateRange!.start).millisecondsSinceEpoch,
-      endAtExclusive:
-          _dateRange == null
-              ? today.add(const Duration(days: 1)).millisecondsSinceEpoch
-              : DateUtils.dateOnly(
-                  _dateRange!.end,
-                ).add(const Duration(days: 1)).millisecondsSinceEpoch,
+      startAtInclusive: _dateRange == null
+          ? 0
+          : DateUtils.dateOnly(_dateRange!.start).millisecondsSinceEpoch,
+      endAtExclusive: _dateRange == null
+          ? today.add(const Duration(days: 1)).millisecondsSinceEpoch
+          : DateUtils.dateOnly(
+              _dateRange!.end,
+            ).add(const Duration(days: 1)).millisecondsSinceEpoch,
     );
     final activityAsync = ref.watch(activityRangeProvider(range));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('History')),
+      appBar: AppBar(
+        title: const Text('History'),
+        actions: [
+          IconButton(
+            key: const ValueKey('open-export-sheet'),
+            tooltip: 'Export report',
+            icon: const Icon(Icons.picture_as_pdf_outlined),
+            onPressed: () async {
+              final file = await showModalBottomSheet<File>(
+                context: context,
+                isScrollControlled: true,
+                useSafeArea: true,
+                builder: (context) => const ExportSheet(),
+              );
+              if (file == null || !context.mounted) return;
+              await _showExportActions(file);
+            },
+          ),
+        ],
+      ),
       body: Column(
         children: [
           Padding(
@@ -104,12 +127,9 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                 }
                 return _buildTimeline(filteredEntries);
               },
-              loading: () => const Center(
-                child: CircularProgressIndicator(),
-              ),
-              error: (error, stackTrace) => Center(
-                child: Text('Could not load history: $error'),
-              ),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stackTrace) =>
+                  Center(child: Text('Could not load history: $error')),
             ),
           ),
         ],
@@ -140,6 +160,89 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     final format = DateFormat.yMMMd();
     return '${format.format(_dateRange!.start)} to '
         '${format.format(_dateRange!.end)}';
+  }
+
+  Future<void> _showExportActions(File file) async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Report ready'),
+        content: Text('Saved ${file.uri.pathSegments.last} in app documents.'),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              Navigator.of(dialogContext).pop();
+              await _previewReport(file);
+            },
+            child: const Text('Preview'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(dialogContext).pop();
+              await _shareReport(file);
+            },
+            child: const Text('Share'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(dialogContext).pop();
+              await _openReport(file);
+            },
+            child: const Text('Open'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Done'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _previewReport(File file) async {
+    try {
+      final bytes = await file.readAsBytes();
+      await Printing.layoutPdf(
+        name: file.uri.pathSegments.last,
+        onLayout: (_) async => bytes,
+      );
+    } catch (error) {
+      _showExportActionError('preview', error);
+    }
+  }
+
+  Future<void> _shareReport(File file) async {
+    try {
+      final result = await SharePlus.instance.share(
+        ShareParams(files: [XFile(file.path)], text: 'Todo activity report'),
+      );
+      if (result.status == ShareResultStatus.unavailable) {
+        _showExportActionError(
+          'share',
+          StateError('The system share sheet is unavailable.'),
+        );
+      }
+    } catch (error) {
+      _showExportActionError('share', error);
+    }
+  }
+
+  Future<void> _openReport(File file) async {
+    try {
+      final result = await OpenFilex.open(file.path, type: 'application/pdf');
+      if (result.type != ResultType.done) {
+        _showExportActionError('open', StateError(result.message));
+      }
+    } catch (error) {
+      _showExportActionError('open', error);
+    }
+  }
+
+  void _showExportActionError(String action, Object error) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Could not $action report: $error')));
   }
 
   Widget _buildTimeline(List<ActivityEntry> entries) {

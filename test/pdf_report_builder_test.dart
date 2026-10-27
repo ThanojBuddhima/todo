@@ -68,16 +68,67 @@ void main() {
     expect(bytes.sublist(0, 5), [37, 80, 68, 70, 45]);
   });
 
-  test('builds a multipage activity table and optional task appendix', () async {
+  test('builds a valid PDF for an empty activity range', () async {
+    final bytes = await const PdfReportBuilder().build(
+      appName: 'Todo',
+      rangeStart: DateTime(2026, 1, 1),
+      rangeEnd: DateTime(2026, 1, 31),
+      activities: const [],
+    );
+
+    expect(bytes.length, greaterThan(100));
+    expect(bytes.sublist(0, 5), [37, 80, 68, 70, 45]);
+  });
+
+  test(
+    'builds a multipage activity table and optional task appendix',
+    () async {
+      final activities = List.generate(
+        80,
+        (index) => ActivityEntry(
+          id: index + 1,
+          taskId: 'task-${index % 4}',
+          taskTitle: 'Example task ${index % 4}',
+          categoryName: index.isEven ? 'Work' : null,
+          action: ActivityAction.created.value,
+          occurredAt: DateTime(
+            2026,
+            1,
+            1,
+            8,
+          ).add(Duration(minutes: index)).millisecondsSinceEpoch,
+        ),
+      );
+
+      final bytes = await const PdfReportBuilder().build(
+        appName: 'Todo',
+        rangeStart: DateTime(2026, 1, 1),
+        rangeEnd: DateTime(2026, 1, 31),
+        generatedAt: DateTime(2026, 2, 1, 12),
+        activities: activities,
+        includeTaskAppendix: true,
+      );
+
+      expect(bytes.length, greaterThan(1000));
+      expect(bytes.sublist(0, 5), [37, 80, 68, 70, 45]);
+    },
+  );
+
+  test('builds a valid PDF for a 1000-entry activity log', () async {
     final activities = List.generate(
-      80,
+      1000,
       (index) => ActivityEntry(
         id: index + 1,
-        taskId: 'task-${index % 4}',
-        taskTitle: 'Example task ${index % 4}',
-        categoryName: index.isEven ? 'Work' : null,
-        action: ActivityAction.created.value,
-        occurredAt: DateTime(2026, 1, 1, 8).add(Duration(minutes: index)).millisecondsSinceEpoch,
+        taskId: 'task-${index % 40}',
+        taskTitle: 'Task ${index % 40}',
+        categoryName: index.isEven ? 'Work' : 'Personal',
+        action:
+            ActivityAction.values[index % ActivityAction.values.length].value,
+        occurredAt: DateTime(
+          2026,
+          1,
+          1,
+        ).add(Duration(minutes: index)).millisecondsSinceEpoch,
       ),
     );
 
@@ -85,9 +136,7 @@ void main() {
       appName: 'Todo',
       rangeStart: DateTime(2026, 1, 1),
       rangeEnd: DateTime(2026, 1, 31),
-      generatedAt: DateTime(2026, 2, 1, 12),
       activities: activities,
-      includeTaskAppendix: true,
     );
 
     expect(bytes.length, greaterThan(1000));

@@ -26,7 +26,7 @@ both light and dark themes, and an exportable PDF report covering every recorded
 | State | `flutter_riverpod` | 3.4.3 | Compile-safe, testable, no BuildContext juggling; async providers map cleanly onto DB reads |
 | Storage | `sqflite` | 2.4.5 | Local file DB. Relational is the right shape: tasks → subtasks → activity_log, with joins and date-range queries for the PDF |
 | PDF build | `pdf` | 3.11.3 | Builds the document in pure Dart; pinned for Dart 3.11 compatibility |
-| PDF share/print | `printing` | 5.15.1 | Native save / share / print sheet |
+| PDF share/print | `printing` | 5.14.3 | Native save / share / print sheet; compatible with Dart 3.11 |
 | Paths | `path_provider` | 2.1.6 | App documents directory |
 | Share | `share_plus` | 13.3.1 | Share the generated file |
 | Open file | `open_filex` | 5.0.0 | Open the PDF in a viewer |
@@ -291,7 +291,7 @@ flutter build apk --release --split-per-abi
 Every box below is one unit of work. Tick `[x]` as it lands. Sections 0–10 above are the
 spec these tasks implement — the checklist is the only place that tracks progress.
 
-**Progress:** 55 / 132 done · current milestone: M7
+**Progress:** 62 / 132 done · current milestone: M7
 
 ### M0 — Environment and project setup
 
@@ -406,13 +406,13 @@ spec these tasks implement — the checklist is the only place that tracks progr
 - [x] Footer — page X of Y + "Generated offline on-device"
 - [x] `export_service.dart` — range → query → build → write to app documents dir
 - [x] Filename format `activity-report-YYYYMMDD-HHmm.pdf`
-- [ ] `export_sheet.dart` — range presets + custom range
-- [ ] Export sheet: category and action-type filters
-- [ ] Export sheet: live "N activities across M tasks" count
-- [ ] Preview via `Printing.layoutPdf`
-- [ ] Save, Share (`share_plus`), Open (`open_filex`) actions
-- [ ] Handle the empty-range case gracefully
-- [ ] **Test:** byte output is a valid non-empty PDF for an empty, small and 1000-entry log
+- [x] `export_sheet.dart` — range presets + custom range
+- [x] Export sheet: category and action-type filters
+- [x] Export sheet: live "N activities across M tasks" count
+- [x] Preview via `Printing.layoutPdf`
+- [x] Save, Share (`share_plus`), Open (`open_filex`) actions
+- [x] Handle the empty-range case gracefully
+- [x] **Test:** byte output is a valid non-empty PDF for an empty, small and 1000-entry log
 - [ ] **Verify:** open a real exported PDF on the phone and check pagination + non-Latin text
 
 ### M8 — Reminders

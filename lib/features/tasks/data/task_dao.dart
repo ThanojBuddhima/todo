@@ -55,7 +55,7 @@ class TaskDao {
       await txn.insert('activity_log', {
         'task_id': task.id,
         'task_title': task.title,
-        'category_name': categoryId,
+        'category_name': await _categoryName(txn, categoryId),
         'action': ActivityAction.created.value,
         'field': 'title',
         'old_value': null,
@@ -96,7 +96,7 @@ class TaskDao {
       await txn.insert('activity_log', {
         'task_id': task.id,
         'task_title': task.title,
-        'category_name': task.categoryId,
+        'category_name': await _categoryName(txn, task.categoryId),
         'action': task.isDone
             ? ActivityAction.completed.value
             : ActivityAction.reopened.value,
@@ -144,7 +144,7 @@ class TaskDao {
       await txn.insert('activity_log', {
         'task_id': task.id,
         'task_title': task.title,
-        'category_name': task.categoryId,
+        'category_name': await _categoryName(txn, task.categoryId),
         'action': updated.isDone
             ? ActivityAction.completed.value
             : ActivityAction.reopened.value,

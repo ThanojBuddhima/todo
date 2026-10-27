@@ -30,6 +30,8 @@ class ExportService {
     required DateTime startDate,
     required DateTime endDate,
     bool includeTaskAppendix = false,
+    Set<String>? categoryNames,
+    Set<int>? actionValues,
   }) async {
     final start = DateTime(startDate.year, startDate.month, startDate.day);
     final end = DateTime(endDate.year, endDate.month, endDate.day);
@@ -37,10 +39,18 @@ class ExportService {
       throw ArgumentError('The report end date must not precede its start date.');
     }
     final endExclusive = end.add(const Duration(days: 1));
-    final activities = await _activityDao.getInRange(
+    final queriedActivities = await _activityDao.getInRange(
       startAtInclusive: start.millisecondsSinceEpoch,
       endAtExclusive: endExclusive.millisecondsSinceEpoch,
     );
+    final activities = queriedActivities.where((entry) {
+      final matchesCategory =
+          categoryNames == null ||
+          categoryNames.contains(entry.categoryName ?? 'Uncategorized');
+      final matchesAction =
+          actionValues == null || actionValues.contains(entry.action);
+      return matchesCategory && matchesAction;
+    }).toList();
     final generatedAt = _clock();
     final bytes = await _reportBuilder.build(
       appName: appName,
