@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:todo/features/tasks/domain/task.dart';
 import 'package:todo/features/tasks/providers/task_providers.dart';
+import 'package:todo/features/tasks/ui/widgets/task_subtasks_section.dart';
 
 class TaskEditorSheet extends ConsumerStatefulWidget {
   const TaskEditorSheet({super.key, this.task});
@@ -158,6 +159,10 @@ class _TaskEditorSheetState extends ConsumerState<TaskEditorSheet> {
                 onSelectionChanged: (value) =>
                     setState(() => priority = value.first),
               ),
+              if (widget.task != null) ...[
+                const SizedBox(height: 20),
+                TaskSubtasksSection(taskId: widget.task!.id),
+              ],
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,

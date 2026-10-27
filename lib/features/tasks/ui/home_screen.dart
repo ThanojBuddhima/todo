@@ -6,6 +6,7 @@ import 'package:todo/core/utils/date_x.dart';
 import 'package:todo/features/tasks/domain/task.dart';
 import 'package:todo/features/tasks/domain/task_filter.dart';
 import 'package:todo/features/tasks/providers/task_providers.dart';
+import 'package:todo/features/tasks/ui/task_detail_screen.dart';
 import 'package:todo/features/tasks/ui/task_editor_sheet.dart';
 import 'package:todo/features/tasks/ui/widgets/empty_state.dart';
 import 'package:todo/features/tasks/ui/widgets/filter_chips_bar.dart';
@@ -251,7 +252,9 @@ class _TaskCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(12),
         onTap: () async {
           final deletedTaskId = await Navigator.of(context).push<String>(
-            MaterialPageRoute(builder: (_) => _TaskDetail(task: task)),
+            MaterialPageRoute(
+              builder: (_) => TaskDetailScreen(taskId: task.id),
+            ),
           );
           if (deletedTaskId == null || !context.mounted) return;
 
@@ -313,6 +316,7 @@ class _TaskCard extends ConsumerWidget {
                         style: Theme.of(context).textTheme.labelMedium,
                       ),
                     ],
+                    _SubtaskProgress(taskId: task.id),
                   ],
                 ),
               ),
@@ -337,49 +341,40 @@ class _TaskCard extends ConsumerWidget {
   }
 }
 
-class _TaskDetail extends ConsumerWidget {
-  const _TaskDetail({required this.task});
+class _SubtaskProgress extends ConsumerWidget {
+  const _SubtaskProgress({required this.taskId});
 
-  final Task task;
+  final String taskId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Task'),
-        actions: [
-          IconButton(
-            onPressed: () async {
-              final dao = ref.read(taskDaoProvider);
-              await dao.softDelete(task.id);
-              if (context.mounted) Navigator.of(context).pop(task.id);
-            },
-            icon: const Icon(Icons.delete_outline),
-          ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(task.title, style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: 8),
-            if (task.notes?.isNotEmpty ?? false) Text(task.notes!),
-            const SizedBox(height: 16),
-            FilledButton.tonal(
-              onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  builder: (_) => TaskEditorSheet(task: task),
-                );
-              },
-              child: const Text('Edit task'),
-            ),
-          ],
+    final subtasksAsync = ref.watch(subtasksProvider(taskId));
+    return subtasksAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (error, stackTrace) => Padding(
+        padding: const EdgeInsets.only(top: 6),
+        child: Text(
+          'Subtasks unavailable',
+          style: Theme.of(context).textTheme.labelSmall,
         ),
       ),
+      data: (subtasks) {
+        if (subtasks.isEmpty) return const SizedBox.shrink();
+        final doneCount = subtasks.where((subtask) => subtask.isDone).length;
+        return Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: Row(
+            children: [
+              const Icon(Icons.checklist, size: 16),
+              const SizedBox(width: 4),
+              Text(
+                '$doneCount/${subtasks.length} subtasks',
+                style: Theme.of(context).textTheme.labelSmall,
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -291,7 +291,7 @@ flutter build apk --release --split-per-abi
 Every box below is one unit of work. Tick `[x]` as it lands. Sections 0–10 above are the
 spec these tasks implement — the checklist is the only place that tracks progress.
 
-**Progress:** 20 / 132 done · current milestone: M3
+**Progress:** 26 / 132 done · current milestone: M4
 
 ### M0 — Environment and project setup
 
@@ -361,12 +361,12 @@ spec these tasks implement — the checklist is the only place that tracks progr
 
 ### M4 — Subtasks and task detail
 
-- [ ] `subtask_tile.dart` — checkbox, inline rename, delete
-- [ ] Inline subtask add/list inside the editor sheet
-- [ ] Animated subtask progress ring (done / total)
-- [ ] `task_detail_screen.dart` — full task view
-- [ ] Per-task activity trail on the detail screen
-- [ ] Subtask reorder
+- [x] `subtask_tile.dart` — checkbox, inline rename, delete
+- [x] Inline subtask add/list inside the editor sheet
+- [x] Animated subtask progress ring (done / total)
+- [x] `task_detail_screen.dart` — full task view
+- [x] Per-task activity trail on the detail screen
+- [x] Subtask reorder
 - [ ] **Verify:** completing a subtask updates the parent progress everywhere it shows
 
 ### M5 — Animation pass

@@ -34,6 +34,8 @@ void main() {
           tasksProvider.overrideWith((ref) async => tasks),
           filteredTasksProvider.overrideWith((ref) async => tasks),
           categoriesProvider.overrideWith((ref) async => []),
+          for (final task in tasks)
+            subtasksProvider(task.id).overrideWith((ref) async => const []),
         ],
         child: const MaterialApp(home: HomeScreen()),
       ),
@@ -73,6 +75,7 @@ void main() {
           tasksProvider.overrideWith((ref) async => [task]),
           filteredTasksProvider.overrideWith((ref) async => [task]),
           categoriesProvider.overrideWith((ref) async => []),
+          subtasksProvider(task.id).overrideWith((ref) async => const []),
         ],
         child: const MaterialApp(home: HomeScreen()),
       ),

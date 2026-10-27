@@ -6,6 +6,8 @@ import 'package:todo/features/tasks/data/category_dao.dart';
 import 'package:todo/features/tasks/data/task_dao.dart';
 import 'package:todo/features/tasks/data/subtask_dao.dart';
 import 'package:todo/features/tasks/domain/category.dart';
+import 'package:todo/features/tasks/domain/activity_entry.dart';
+import 'package:todo/features/tasks/domain/subtask.dart';
 import 'package:todo/features/tasks/domain/task.dart';
 import 'package:todo/features/tasks/domain/task_filter.dart';
 
@@ -23,6 +25,23 @@ final categoriesProvider = FutureProvider<List<Category>>((ref) async {
   final dao = ref.watch(categoryDaoProvider);
   return dao.getCategories();
 });
+
+final taskByIdProvider = FutureProvider.family<Task?, String>((ref, id) async {
+  return ref.watch(taskDaoProvider).getTaskById(id);
+});
+
+final subtasksProvider = FutureProvider.family<List<Subtask>, String>((
+  ref,
+  taskId,
+) async {
+  return ref.watch(subtaskDaoProvider).getForTask(taskId);
+});
+
+final taskActivityProvider = FutureProvider.family<List<ActivityEntry>, String>(
+  (ref, taskId) async {
+    return ref.watch(activityDaoProvider).getForTask(taskId);
+  },
+);
 
 class TaskFilterController extends StateNotifier<TaskFilter> {
   TaskFilterController() : super(const TaskFilter());
