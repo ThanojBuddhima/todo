@@ -44,7 +44,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final filter = ref.watch(taskFilterProvider);
     final tasksAsync = ref.watch(filteredTasksProvider);
-    final allTasksAsync = ref.watch(tasksProvider);
+    final stats = ref.watch(taskStatsProvider);
     final theme = Theme.of(context);
     final now = DateTime.now();
 
@@ -91,26 +91,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Expanded(
             child: tasksAsync.when(
               data: (tasks) {
-                final allTasks = allTasksAsync.valueOrNull ?? tasks;
-                final today = DateTime.now();
-                final todayCount = allTasks.where((task) {
-                  if (task.isDone || task.dueAt == null) return false;
-                  return DateX.isSameDay(
-                    DateTime.fromMillisecondsSinceEpoch(task.dueAt!),
-                    today,
-                  );
-                }).length;
-                final pendingCount = allTasks
-                    .where((task) => !task.isDone)
-                    .length;
-                final doneCount = allTasks.where((task) => task.isDone).length;
                 return ListView(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
                   children: [
                     StatRow(
-                      today: todayCount,
-                      pending: pendingCount,
-                      done: doneCount,
+                      today: stats.today,
+                      pending: stats.pending,
+                      done: stats.done,
                     ),
                     const SizedBox(height: 16),
                     if (tasks.isEmpty)

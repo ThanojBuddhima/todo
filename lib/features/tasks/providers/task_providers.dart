@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:todo/core/utils/date_x.dart';
 import 'package:todo/features/tasks/data/activity_dao.dart';
 import 'package:todo/features/tasks/data/category_dao.dart';
 import 'package:todo/features/tasks/data/task_dao.dart';
@@ -19,6 +20,33 @@ final subtaskDaoProvider = Provider<SubtaskDao>((ref) => SubtaskDao());
 final tasksProvider = FutureProvider<List<Task>>((ref) async {
   final dao = ref.watch(taskDaoProvider);
   return dao.getTasks();
+});
+
+typedef TaskStats = ({int today, int pending, int done});
+
+final taskStatsProvider = Provider<TaskStats>((ref) {
+  final tasks = ref.watch(tasksProvider).valueOrNull ?? const <Task>[];
+  final today = DateTime.now();
+  var todayCount = 0;
+  var pendingCount = 0;
+  var doneCount = 0;
+
+  for (final task in tasks) {
+    if (task.isDone) {
+      doneCount++;
+    } else {
+      pendingCount++;
+      if (task.dueAt != null &&
+          DateX.isSameDay(
+            DateTime.fromMillisecondsSinceEpoch(task.dueAt!),
+            today,
+          )) {
+        todayCount++;
+      }
+    }
+  }
+
+  return (today: todayCount, pending: pendingCount, done: doneCount);
 });
 
 final categoriesProvider = FutureProvider<List<Category>>((ref) async {
