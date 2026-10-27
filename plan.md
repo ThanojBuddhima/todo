@@ -291,7 +291,7 @@ flutter build apk --release --split-per-abi
 Every box below is one unit of work. Tick `[x]` as it lands. Sections 0–10 above are the
 spec these tasks implement — the checklist is the only place that tracks progress.
 
-**Progress:** 62 / 132 done · current milestone: M7
+**Progress:** 63 / 132 done · current milestone: M7
 
 ### M0 — Environment and project setup
 
@@ -395,7 +395,7 @@ spec these tasks implement — the checklist is the only place that tracks progr
 
 ### M7 — PDF activity report
 
-- [ ] Load embedded Inter fonts for the PDF renderer
+- [x] Load embedded Inter fonts for the PDF renderer
 - [x] `pdf_report_builder.dart` skeleton — `MultiPage`, pure data in / `Uint8List` out
 - [x] Cover block — app name, title, range, generated timestamp
 - [x] Summary — created / completed / deleted, completion rate, busiest day

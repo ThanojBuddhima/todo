@@ -9,6 +9,8 @@ import 'package:todo/features/tasks/domain/activity_action.dart';
 import 'package:todo/features/tasks/domain/activity_entry.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   test('queries the selected days and writes a timestamped PDF', () async {
     final directory = await Directory.systemTemp.createTemp('todo-export-');
     addTearDown(() => directory.delete(recursive: true));
@@ -36,6 +38,7 @@ void main() {
     expect(builder.rangeStart, DateTime(2026, 1, 1));
     expect(builder.rangeEnd, DateTime(2026, 1, 2));
     expect(builder.includeTaskAppendix, isTrue);
+    expect(builder.receivedEmbeddedFonts, isTrue);
     expect(file.path, endsWith('activity-report-20260308-0907.pdf'));
     expect(await file.readAsBytes(), [37, 80, 68, 70, 45]);
   });
@@ -95,6 +98,7 @@ class _FakePdfReportBuilder extends PdfReportBuilder {
   DateTime? rangeStart;
   DateTime? rangeEnd;
   bool? includeTaskAppendix;
+  bool receivedEmbeddedFonts = false;
   List<ActivityEntry> activities = [];
 
   @override
@@ -105,11 +109,15 @@ class _FakePdfReportBuilder extends PdfReportBuilder {
     required List<ActivityEntry> activities,
     DateTime? generatedAt,
     bool includeTaskAppendix = false,
+    Uint8List? regularFontBytes,
+    Uint8List? semiboldFontBytes,
   }) async {
     this.rangeStart = rangeStart;
     this.rangeEnd = rangeEnd;
     this.includeTaskAppendix = includeTaskAppendix;
     this.activities = activities;
+    receivedEmbeddedFonts =
+        regularFontBytes != null && semiboldFontBytes != null;
     return Uint8List.fromList([37, 80, 68, 70, 45]);
   }
 }

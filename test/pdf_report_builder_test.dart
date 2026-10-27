@@ -1,9 +1,14 @@
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:todo/features/export/pdf_report_builder.dart';
 import 'package:todo/features/tasks/domain/activity_action.dart';
 import 'package:todo/features/tasks/domain/activity_entry.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   test('summarizes task events and finds the busiest day', () {
     final busiestDay = DateTime(2026, 1, 1);
     final summary = PdfReportBuilder.summarize([
@@ -49,7 +54,7 @@ void main() {
   });
 
   test('builds a PDF cover from report data without database access', () async {
-    final bytes = await const PdfReportBuilder().build(
+    final bytes = await _buildPdf(
       appName: 'Todo',
       rangeStart: DateTime(2026, 1, 1),
       rangeEnd: DateTime(2026, 1, 31),
@@ -69,7 +74,7 @@ void main() {
   });
 
   test('builds a valid PDF for an empty activity range', () async {
-    final bytes = await const PdfReportBuilder().build(
+    final bytes = await _buildPdf(
       appName: 'Todo',
       rangeStart: DateTime(2026, 1, 1),
       rangeEnd: DateTime(2026, 1, 31),
@@ -100,7 +105,7 @@ void main() {
         ),
       );
 
-      final bytes = await const PdfReportBuilder().build(
+      final bytes = await _buildPdf(
         appName: 'Todo',
         rangeStart: DateTime(2026, 1, 1),
         rangeEnd: DateTime(2026, 1, 31),
@@ -132,7 +137,7 @@ void main() {
       ),
     );
 
-    final bytes = await const PdfReportBuilder().build(
+    final bytes = await _buildPdf(
       appName: 'Todo',
       rangeStart: DateTime(2026, 1, 1),
       rangeEnd: DateTime(2026, 1, 31),
@@ -142,6 +147,52 @@ void main() {
     expect(bytes.length, greaterThan(1000));
     expect(bytes.sublist(0, 5), [37, 80, 68, 70, 45]);
   });
+
+  test('renders non-Latin task text with the embedded Inter fonts', () async {
+    final bytes = await _buildPdf(
+      appName: 'Todo',
+      rangeStart: DateTime(2026, 1, 1),
+      rangeEnd: DateTime(2026, 1, 31),
+      activities: const [
+        ActivityEntry(
+          id: 1,
+          taskTitle: 'Καλημέρα κόσμε',
+          action: 0,
+          occurredAt: 1767225600000,
+        ),
+      ],
+    );
+
+    expect(bytes.sublist(0, 5), [37, 80, 68, 70, 45]);
+  });
+}
+
+Future<Uint8List> _buildPdf({
+  required String appName,
+  required DateTime rangeStart,
+  required DateTime rangeEnd,
+  required List<ActivityEntry> activities,
+  DateTime? generatedAt,
+  bool includeTaskAppendix = false,
+}) async {
+  final regularFont = await rootBundle.load('assets/fonts/Inter-Regular.ttf');
+  final semiboldFont = await rootBundle.load('assets/fonts/Inter-SemiBold.ttf');
+  return const PdfReportBuilder().build(
+    appName: appName,
+    rangeStart: rangeStart,
+    rangeEnd: rangeEnd,
+    activities: activities,
+    generatedAt: generatedAt,
+    includeTaskAppendix: includeTaskAppendix,
+    regularFontBytes: regularFont.buffer.asUint8List(
+      regularFont.offsetInBytes,
+      regularFont.lengthInBytes,
+    ),
+    semiboldFontBytes: semiboldFont.buffer.asUint8List(
+      semiboldFont.offsetInBytes,
+      semiboldFont.lengthInBytes,
+    ),
+  );
 }
 
 ActivityEntry _entry(

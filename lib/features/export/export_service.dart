@@ -1,5 +1,7 @@
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
@@ -36,7 +38,9 @@ class ExportService {
     final start = DateTime(startDate.year, startDate.month, startDate.day);
     final end = DateTime(endDate.year, endDate.month, endDate.day);
     if (end.isBefore(start)) {
-      throw ArgumentError('The report end date must not precede its start date.');
+      throw ArgumentError(
+        'The report end date must not precede its start date.',
+      );
     }
     final endExclusive = end.add(const Duration(days: 1));
     final queriedActivities = await _activityDao.getInRange(
@@ -52,6 +56,10 @@ class ExportService {
       return matchesCategory && matchesAction;
     }).toList();
     final generatedAt = _clock();
+    final regularFontBytes = await _loadFont('assets/fonts/Inter-Regular.ttf');
+    final semiboldFontBytes = await _loadFont(
+      'assets/fonts/Inter-SemiBold.ttf',
+    );
     final bytes = await _reportBuilder.build(
       appName: appName,
       rangeStart: start,
@@ -59,6 +67,8 @@ class ExportService {
       activities: activities,
       generatedAt: generatedAt,
       includeTaskAppendix: includeTaskAppendix,
+      regularFontBytes: regularFontBytes,
+      semiboldFontBytes: semiboldFontBytes,
     );
 
     final directory = await _documentsDirectory();
@@ -68,5 +78,10 @@ class ExportService {
     final file = File(path.join(directory.path, fileName));
     await file.writeAsBytes(bytes, flush: true);
     return file;
+  }
+
+  Future<Uint8List> _loadFont(String assetPath) async {
+    final data = await rootBundle.load(assetPath);
+    return data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
   }
 }

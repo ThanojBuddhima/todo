@@ -90,12 +90,29 @@ class PdfReportBuilder {
     required List<ActivityEntry> activities,
     DateTime? generatedAt,
     bool includeTaskAppendix = false,
+    Uint8List? regularFontBytes,
+    Uint8List? semiboldFontBytes,
   }) async {
+    if ((regularFontBytes == null) != (semiboldFontBytes == null)) {
+      throw ArgumentError(
+        'Both regular and semibold font bytes must be provided together.',
+      );
+    }
+
     final document = pw.Document();
     final generated = generatedAt ?? DateTime.now();
     final dateFormat = DateFormat.yMMMd();
     final dateTimeFormat = DateFormat.yMMMd().add_jm();
     final summary = summarize(activities);
+    final theme = regularFontBytes == null
+        ? pw.ThemeData.withFont(
+            base: pw.Font.helvetica(),
+            bold: pw.Font.helveticaBold(),
+          )
+        : pw.ThemeData.withFont(
+            base: pw.Font.ttf(ByteData.sublistView(regularFontBytes)),
+            bold: pw.Font.ttf(ByteData.sublistView(semiboldFontBytes!)),
+          );
     final categories = summary.categoryActivityCounts.entries.toList()
       ..sort((left, right) => right.value.compareTo(left.value));
     final largestCategoryCount = categories.isEmpty ? 0 : categories.first.value;
@@ -136,10 +153,7 @@ class PdfReportBuilder {
     document.addPage(
       pw.MultiPage(
         maxPages: 100,
-        theme: pw.ThemeData.withFont(
-          base: pw.Font.helvetica(),
-          bold: pw.Font.helveticaBold(),
-        ),
+        theme: theme,
         margin: const pw.EdgeInsets.all(36),
         footer: (context) => pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
