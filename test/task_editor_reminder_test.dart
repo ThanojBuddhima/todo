@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:todo/features/reminders/notification_service.dart';
 import 'package:todo/features/tasks/data/task_dao.dart';
+import 'package:todo/features/tasks/domain/priority.dart';
 import 'package:todo/features/tasks/domain/task.dart';
 import 'package:todo/features/tasks/providers/task_providers.dart';
 import 'package:todo/features/tasks/ui/task_editor_sheet.dart';
@@ -66,7 +67,7 @@ Task _task(DateTime remindAt) {
   return Task(
     id: 'reminder-task',
     title: 'Review notes',
-    priority: 1,
+    priority: Priority.medium,
     remindAt: remindAt.millisecondsSinceEpoch,
     notificationId: 42,
     isDone: false,

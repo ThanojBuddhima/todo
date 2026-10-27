@@ -2,6 +2,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 import 'package:todo/core/db/app_database.dart';
 import 'package:todo/features/tasks/domain/activity_action.dart';
+import 'package:todo/features/tasks/domain/priority.dart';
 import 'package:todo/features/tasks/domain/task.dart';
 
 class TaskDao {
@@ -31,7 +32,7 @@ class TaskDao {
     required String title,
     String? notes,
     String? categoryId,
-    int priority = 1,
+    Priority priority = Priority.medium,
     int? dueAt,
     int? remindAt,
     int? notificationId,

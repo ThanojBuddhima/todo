@@ -4,6 +4,7 @@ import 'package:flutter/services.dart' show PlatformException;
 import 'package:intl/intl.dart';
 import 'package:todo/features/reminders/notification_service.dart';
 import 'package:todo/features/tasks/data/task_dao.dart';
+import 'package:todo/features/tasks/domain/priority.dart';
 import 'package:todo/features/tasks/domain/task.dart';
 import 'package:todo/features/tasks/providers/task_providers.dart';
 import 'package:todo/features/tasks/ui/widgets/task_subtasks_section.dart';
@@ -23,7 +24,7 @@ class _TaskEditorSheetState extends ConsumerState<TaskEditorSheet> {
   DateTime? dueDate;
   DateTime? remindAt;
   String? categoryId;
-  int priority = 1;
+  Priority priority = Priority.medium;
 
   @override
   void initState() {
@@ -168,11 +169,11 @@ class _TaskEditorSheetState extends ConsumerState<TaskEditorSheet> {
                 error: (_, _) => const SizedBox.shrink(),
               ),
               const SizedBox(height: 12),
-              SegmentedButton<int>(
+              SegmentedButton<Priority>(
                 segments: const [
-                  ButtonSegment(value: 0, label: Text('Low')),
-                  ButtonSegment(value: 1, label: Text('Medium')),
-                  ButtonSegment(value: 2, label: Text('High')),
+                  ButtonSegment(value: Priority.low, label: Text('Low')),
+                  ButtonSegment(value: Priority.medium, label: Text('Medium')),
+                  ButtonSegment(value: Priority.high, label: Text('High')),
                 ],
                 selected: {priority},
                 onSelectionChanged: (value) =>
@@ -317,7 +318,8 @@ class _TaskEditorSheetState extends ConsumerState<TaskEditorSheet> {
     ReminderSchedulePrecision? reminderPrecision;
     if (remindAt != null) {
       try {
-        reminderPrecision = await notificationService.requestReminderPermission();
+        reminderPrecision = await notificationService
+            .requestReminderPermission();
       } on PlatformException catch (error) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -458,9 +460,9 @@ class _TaskEditorSheetState extends ConsumerState<TaskEditorSheet> {
             'Task saved, but the reminder failed and its previous notification could not be canceled: ${cancelError.message ?? cancelError.code}';
       }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
       }
       return null;
     }

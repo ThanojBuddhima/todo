@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:todo/features/tasks/domain/priority.dart';
 import 'package:todo/features/tasks/domain/task.dart';
 import 'package:todo/features/tasks/providers/task_providers.dart';
 
@@ -30,7 +31,7 @@ Task _task(String id, {int? dueAt, bool isDone = false}) {
   return Task(
     id: id,
     title: id,
-    priority: 1,
+    priority: Priority.medium,
     dueAt: dueAt,
     isDone: isDone,
     createdAt: now,

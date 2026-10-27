@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:todo/features/tasks/domain/priority.dart';
 import 'package:todo/features/tasks/domain/task.dart';
 import 'package:todo/features/tasks/domain/task_filter.dart';
 import 'package:todo/features/tasks/providers/task_providers.dart';
@@ -25,7 +26,7 @@ void main() {
       title: 'Plan sprint review',
       notes: 'Prepare deck for engineering sync',
       categoryId: 'work',
-      priority: 2,
+      priority: Priority.high,
       dueAt: todayDue,
       isDone: false,
       createdAt: now.millisecondsSinceEpoch,
@@ -37,7 +38,7 @@ void main() {
       title: 'Book dentist appointment',
       notes: 'Call clinic after work',
       categoryId: 'personal',
-      priority: 1,
+      priority: Priority.medium,
       dueAt: tomorrowDue,
       isDone: false,
       createdAt: now.millisecondsSinceEpoch,
@@ -48,7 +49,7 @@ void main() {
       id: '3',
       title: 'Pay rent',
       categoryId: 'personal',
-      priority: 1,
+      priority: Priority.medium,
       isDone: true,
       createdAt: now.millisecondsSinceEpoch,
       updatedAt: now.millisecondsSinceEpoch,

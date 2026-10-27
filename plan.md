@@ -38,15 +38,16 @@ both light and dark themes, and an exportable PDF report covering every recorded
 | Motion | `flutter_animate` | 4.5.2 | Declarative entrance chains |
 | Transitions | `animations` | 3.0.0 | Container-transform / shared-axis |
 | Swipe | `flutter_slidable` | 4.0.3 | Swipe actions on cards |
-| Fonts | `google_fonts` | 9.0.0 | Inter / Manrope in-app |
+| Fonts | bundled TTFs | — | Inter 400/600 + Manrope variable, declared under `fonts:` — no `google_fonts`, so nothing can fetch at runtime |
 | Dates | `intl` | 0.20.3 | Formatting and grouping |
 | Ids | `uuid` | 4.6.0 | Stable task ids |
 
 Build config: `minSdkVersion 23`, `compileSdk 36`, `targetSdk 36`.
 
 **Offline guarantee:** the `INTERNET` permission is never declared in the manifest. Nothing in
-the dependency list requires network access at runtime. `google_fonts` is used with fonts
-bundled in `assets/fonts/` so it never fetches from the network.
+the dependency list requires network access at runtime. Fonts are bundled in `assets/fonts/`
+and declared under `flutter: fonts:`, referenced by family name — there is no font-fetching
+package in the dependency list at all.
 
 ---
 
@@ -291,7 +292,7 @@ flutter build apk --release --split-per-abi
 Every box below is one unit of work. Tick `[x]` as it lands. Sections 0–10 above are the
 spec these tasks implement — the checklist is the only place that tracks progress.
 
-**Progress:** 84 / 132 done · current milestone: M9
+**Progress:** 96 / 132 done · current milestone: M10 (M2 unit tests and the on-device verify steps still outstanding)
 
 ### M0 — Environment and project setup
 
@@ -301,23 +302,23 @@ spec these tasks implement — the checklist is the only place that tracks progr
 - [ ] `flutter create . --platforms=android --org com.thanoj`
 - [ ] Set `minSdkVersion 23`, `compileSdk 36`, `targetSdk 36` in `android/app/build.gradle.kts`
 - [ ] Add all §1 dependencies to `pubspec.yaml` at the pinned versions
-- [ ] Download Inter + Manrope TTFs into `assets/fonts/`, declare them in `pubspec.yaml`
+- [x] Download Inter + Manrope TTFs into `assets/fonts/`, declare them in `pubspec.yaml`
 - [ ] Verify `AndroidManifest.xml` declares **no** `INTERNET` permission
 - [ ] Add `key.properties`, `*.jks`, `build/` to `.gitignore`
 - [ ] Commit the scaffold
 
 ### M1 — Theme system and app shell
 
-- [ ] `core/theme/app_colors.dart` — seed `#6C5CE7`, dark surfaces `#0E0E13` / `#17171F`, priority + action colors
-- [ ] `core/theme/app_typography.dart` — Manrope headings, Inter body, tabular figures
-- [ ] `core/theme/motion.dart` — `fast/base/slow` durations, `emphasized` curve, checkbox spring
-- [ ] `core/theme/app_theme.dart` — light and dark `ThemeData` from `ColorScheme.fromSeed`
-- [ ] Card theme: 20px radius, hairline border, layered surface containers
-- [ ] `settings_providers.dart` — `themeMode` persisted via `shared_preferences`
-- [ ] `app.dart` — `MaterialApp` with both themes and `AnimatedTheme` cross-fade
-- [ ] Reduced-motion helper reading `MediaQuery.disableAnimations`
-- [ ] Verify WCAG AA contrast for body text in both themes
-- [ ] Placeholder Home / History / Settings routes with shared-axis transitions
+- [x] `core/theme/app_colors.dart` — seed `#6C5CE7`, dark surfaces `#0E0E13` / `#17171F`, priority + action colors
+- [x] `core/theme/app_typography.dart` — Manrope headings, Inter body, tabular figures
+- [x] `core/theme/motion.dart` — `fast/base/slow` durations, `emphasized` curve, checkbox spring
+- [x] `core/theme/app_theme.dart` — light and dark `ThemeData` from `ColorScheme.fromSeed`
+- [x] Card theme: 20px radius, hairline border, layered surface containers
+- [x] `settings_providers.dart` — `themeMode` persisted via `shared_preferences`
+- [x] `app.dart` — `MaterialApp` with both themes and `AnimatedTheme` cross-fade
+- [x] Reduced-motion helper reading `MediaQuery.disableAnimations`
+- [x] Verify WCAG AA contrast for body text in both themes — automated in `test/theme_contrast_test.dart`
+- [x] Placeholder Home / History / Settings routes with shared-axis transitions
 - [ ] **Verify:** app runs; theme toggle cross-fades smoothly
 
 ### M2 — Database layer
@@ -329,7 +330,7 @@ spec these tasks implement — the checklist is the only place that tracks progr
 - [x] `activity_log` table per §3
 - [x] Indexes `idx_activity_time`, `idx_tasks_due`
 - [x] `ActivityAction` enum with its 15 values, index-stable
-- [ ] Domain models: `Task`, `Subtask`, `Category`, `Priority`, `ActivityEntry` with `fromMap`/`toMap`
+- [x] Domain models: `Task`, `Subtask`, `Category`, `Priority`, `ActivityEntry` with `fromMap`/`toMap`
 - [ ] `activity_dao.dart` — insert entry, query by range, query by task, count by action
 - [ ] `task_dao.dart` — create / update / toggleDone / softDelete / restore / purge, each in one transaction with its log write
 - [ ] `subtask_dao.dart` — add / toggle / delete / reorder, each logged in-transaction

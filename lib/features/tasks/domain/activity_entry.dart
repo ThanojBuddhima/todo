@@ -31,7 +31,22 @@ class ActivityEntry {
       field: map['field'] as String?,
       oldValue: map['old_value'] as String?,
       newValue: map['new_value'] as String?,
-      occurredAt: map['occurred_at'] as int? ?? DateTime.now().millisecondsSinceEpoch,
+      occurredAt:
+          map['occurred_at'] as int? ?? DateTime.now().millisecondsSinceEpoch,
     );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'task_id': taskId,
+      'task_title': taskTitle,
+      'category_name': categoryName,
+      'action': action,
+      'field': field,
+      'old_value': oldValue,
+      'new_value': newValue,
+      'occurred_at': occurredAt,
+    };
   }
 }

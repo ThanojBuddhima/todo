@@ -1,9 +1,11 @@
+import 'package:todo/features/tasks/domain/priority.dart';
+
 class Task {
   final String id;
   final String title;
   final String? notes;
   final String? categoryId;
-  final int priority;
+  final Priority priority;
   final int? dueAt;
   final int? remindAt;
   final int? notificationId;
@@ -37,14 +39,18 @@ class Task {
       title: map['title'] as String,
       notes: map['notes'] as String?,
       categoryId: map['category_id'] as String?,
-      priority: map['priority'] as int? ?? 1,
+      priority: Priority.fromValue(
+        map['priority'] as int? ?? Priority.medium.value,
+      ),
       dueAt: map['due_at'] as int?,
       remindAt: map['remind_at'] as int?,
       notificationId: map['notification_id'] as int?,
       isDone: (map['is_done'] as int? ?? 0) == 1,
       completedAt: map['completed_at'] as int?,
-      createdAt: map['created_at'] as int? ?? DateTime.now().millisecondsSinceEpoch,
-      updatedAt: map['updated_at'] as int? ?? DateTime.now().millisecondsSinceEpoch,
+      createdAt:
+          map['created_at'] as int? ?? DateTime.now().millisecondsSinceEpoch,
+      updatedAt:
+          map['updated_at'] as int? ?? DateTime.now().millisecondsSinceEpoch,
       sortIndex: (map['sort_index'] as num?)?.toDouble() ?? 0,
       deletedAt: map['deleted_at'] as int?,
     );
@@ -56,7 +62,7 @@ class Task {
       'title': title,
       'notes': notes,
       'category_id': categoryId,
-      'priority': priority,
+      'priority': priority.value,
       'due_at': dueAt,
       'remind_at': remindAt,
       'notification_id': notificationId,

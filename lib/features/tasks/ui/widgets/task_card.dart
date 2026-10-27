@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:todo/core/theme/app_colors.dart';
 import 'package:todo/core/theme/motion.dart';
+import 'package:todo/features/tasks/domain/priority.dart';
 import 'package:todo/features/tasks/domain/task.dart';
 import 'package:todo/features/tasks/providers/task_providers.dart';
 import 'package:todo/features/tasks/ui/widgets/animated_checkbox.dart';
@@ -22,9 +23,9 @@ class TaskCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final priorityColor = switch (task.priority) {
-      0 => AppColors.lowPriority,
-      2 => AppColors.highPriority,
-      _ => AppColors.mediumPriority,
+      Priority.low => AppColors.lowPriority,
+      Priority.high => AppColors.highPriority,
+      Priority.medium => AppColors.mediumPriority,
     };
 
     return TweenAnimationBuilder<double>(

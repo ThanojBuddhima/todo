@@ -17,7 +17,6 @@ dependencies:
   uuid: ^4.6.0
   intl: ^0.20.3
   path: ^1.9.1
-  google_fonts: ^6.2.1
   animations: ^2.0.11
   flutter_slidable: ^4.0.3
   pdf: 3.11.3
@@ -39,6 +38,17 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  # Also declared as plain assets: the PDF builder reads the raw bytes.
   assets:
     - assets/fonts/Inter-Regular.ttf
     - assets/fonts/Inter-SemiBold.ttf
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
+    - family: Manrope
+      fonts:
+        - asset: assets/fonts/Manrope-Variable.ttf

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:todo/features/tasks/data/subtask_dao.dart';
 import 'package:todo/features/tasks/data/task_dao.dart';
+import 'package:todo/features/tasks/domain/priority.dart';
 import 'package:todo/features/tasks/domain/subtask.dart';
 import 'package:todo/features/tasks/domain/task.dart';
 import 'package:todo/features/tasks/providers/task_providers.dart';
@@ -67,7 +68,7 @@ void main() {
     final task = Task(
       id: 'task-progress',
       title: 'Progress sample',
-      priority: 1,
+      priority: Priority.medium,
       isDone: false,
       createdAt: now,
       updatedAt: now,

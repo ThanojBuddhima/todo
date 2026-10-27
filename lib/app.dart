@@ -1,6 +1,8 @@
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:todo/core/theme/app_theme.dart';
+import 'package:todo/core/theme/motion.dart';
 import 'package:todo/features/activity/ui/history_screen.dart';
 import 'package:todo/features/security/lock_service.dart';
 import 'package:todo/features/security/ui/lock_screen.dart';
@@ -26,6 +28,9 @@ class App extends ConsumerWidget {
       theme: AppTheme.light(seed: seed),
       darkTheme: AppTheme.dark(seed: seed),
       themeMode: themeMode,
+      // MaterialApp drives the theme swap through AnimatedTheme internally.
+      themeAnimationDuration: AppMotion.platformReduced ? Duration.zero : AppMotion.themeCrossFade,
+      themeAnimationCurve: AppMotion.emphasized,
       home: const LockGate(child: RootShell()),
     );
   }
@@ -110,6 +115,7 @@ class RootShell extends StatefulWidget {
 
 class _RootShellState extends State<RootShell> {
   int _index = 0;
+  int _previousIndex = 0;
 
   static const pages = [HomeScreen(), HistoryScreen(), SettingsScreen()];
 
@@ -142,10 +148,24 @@ class _RootShellState extends State<RootShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _index, children: pages),
+      body: PageTransitionSwitcher(
+        duration: AppMotion.duration(context, AppMotion.base),
+        reverse: _index < _previousIndex,
+        transitionBuilder: (child, animation, secondaryAnimation) => SharedAxisTransition(
+          animation: animation,
+          secondaryAnimation: secondaryAnimation,
+          transitionType: SharedAxisTransitionType.horizontal,
+          fillColor: Colors.transparent,
+          child: child,
+        ),
+        child: KeyedSubtree(key: ValueKey(_index), child: pages[_index]),
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
-        onDestinationSelected: (value) => setState(() => _index = value),
+        onDestinationSelected: (value) => setState(() {
+          _previousIndex = _index;
+          _index = value;
+        }),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),

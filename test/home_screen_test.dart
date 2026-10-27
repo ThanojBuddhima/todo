@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:todo/features/tasks/data/task_dao.dart';
+import 'package:todo/features/tasks/domain/priority.dart';
 import 'package:todo/features/tasks/domain/task.dart';
 import 'package:todo/features/tasks/providers/task_providers.dart';
 import 'package:todo/features/tasks/ui/home_screen.dart';
@@ -273,7 +274,7 @@ Task _task(String id, String title, {int? dueAt, bool isDone = false}) {
   return Task(
     id: id,
     title: title,
-    priority: 1,
+    priority: Priority.medium,
     dueAt: dueAt,
     isDone: isDone,
     createdAt: now,
