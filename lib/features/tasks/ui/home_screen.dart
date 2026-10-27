@@ -7,7 +7,9 @@ import 'package:todo/features/tasks/domain/task.dart';
 import 'package:todo/features/tasks/domain/task_filter.dart';
 import 'package:todo/features/tasks/providers/task_providers.dart';
 import 'package:todo/features/tasks/ui/task_editor_sheet.dart';
+import 'package:todo/features/tasks/ui/widgets/empty_state.dart';
 import 'package:todo/features/tasks/ui/widgets/filter_chips_bar.dart';
+import 'package:todo/features/tasks/ui/widgets/stat_row.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -36,6 +38,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final filter = ref.watch(taskFilterProvider);
     final tasksAsync = ref.watch(filteredTasksProvider);
+    final allTasksAsync = ref.watch(tasksProvider);
     final theme = Theme.of(context);
     final now = DateTime.now();
 
@@ -82,15 +85,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Expanded(
             child: tasksAsync.when(
               data: (tasks) {
-                final pendingCount = tasks.where((task) => !task.isDone).length;
-                final doneCount = tasks.where((task) => task.isDone).length;
+                final allTasks = allTasksAsync.valueOrNull ?? tasks;
+                final today = DateTime.now();
+                final todayCount = allTasks.where((task) {
+                  if (task.isDone || task.dueAt == null) return false;
+                  return DateX.isSameDay(
+                    DateTime.fromMillisecondsSinceEpoch(task.dueAt!),
+                    today,
+                  );
+                }).length;
+                final pendingCount = allTasks
+                    .where((task) => !task.isDone)
+                    .length;
+                final doneCount = allTasks.where((task) => task.isDone).length;
                 return ListView(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
                   children: [
-                    _StatsRow(pending: pendingCount, done: doneCount),
+                    StatRow(
+                      today: todayCount,
+                      pending: pendingCount,
+                      done: doneCount,
+                    ),
                     const SizedBox(height: 16),
                     if (tasks.isEmpty)
-                      const _EmptyState()
+                      EmptyState(filter: filter)
                     else
                       ..._taskSections(tasks, filter),
                   ],
@@ -214,75 +232,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 }
 
-class _StatsRow extends StatelessWidget {
-  const _StatsRow({required this.pending, required this.done});
-
-  final int pending;
-  final int done;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Row(
-      children: [
-        Expanded(
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Pending', style: theme.textTheme.labelLarge),
-                  const SizedBox(height: 8),
-                  Text('$pending', style: theme.textTheme.headlineMedium),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Done', style: theme.textTheme.labelLarge),
-                  const SizedBox(height: 8),
-                  Text('$done', style: theme.textTheme.headlineMedium),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          children: [
-            const Icon(Icons.checklist_rounded, size: 52),
-            const SizedBox(height: 16),
-            Text('No tasks yet', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 8),
-            const Text('Tap the add button to plan your next step.'),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _TaskCard extends ConsumerWidget {
   const _TaskCard({required this.task});
 
@@ -300,10 +249,27 @@ class _TaskCard extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (_) => _TaskDetail(task: task)));
+        onTap: () async {
+          final deletedTaskId = await Navigator.of(context).push<String>(
+            MaterialPageRoute(builder: (_) => _TaskDetail(task: task)),
+          );
+          if (deletedTaskId == null || !context.mounted) return;
+
+          ref.invalidate(tasksProvider);
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                content: const Text('Task deleted'),
+                action: SnackBarAction(
+                  label: 'Undo',
+                  onPressed: () async {
+                    await ref.read(taskDaoProvider).restoreTask(deletedTaskId);
+                    ref.invalidate(tasksProvider);
+                  },
+                ),
+              ),
+            );
         },
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -386,8 +352,7 @@ class _TaskDetail extends ConsumerWidget {
             onPressed: () async {
               final dao = ref.read(taskDaoProvider);
               await dao.softDelete(task.id);
-              if (context.mounted) Navigator.of(context).pop();
-              ref.invalidate(tasksProvider);
+              if (context.mounted) Navigator.of(context).pop(task.id);
             },
             icon: const Icon(Icons.delete_outline),
           ),

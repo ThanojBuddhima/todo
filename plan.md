@@ -291,7 +291,7 @@ flutter build apk --release --split-per-abi
 Every box below is one unit of work. Tick `[x]` as it lands. Sections 0–10 above are the
 spec these tasks implement — the checklist is the only place that tracks progress.
 
-**Progress:** 15 / 132 done · current milestone: M3
+**Progress:** 20 / 132 done · current milestone: M3
 
 ### M0 — Environment and project setup
 
@@ -345,18 +345,18 @@ spec these tasks implement — the checklist is the only place that tracks progr
 - [x] `TaskFilter` model — All / Today / Upcoming / Pending / Done / category / search text
 - [ ] `task_card.dart` — title, notes preview, due chip, priority accent bar + dot, subtask count
 - [x] `home_screen.dart` — greeting, date, scaffold, FAB
-- [ ] `stat_row.dart` — Today / Pending / Done counts
-- [ ] Search field wired to the filter provider (debounced)
+- [x] `stat_row.dart` — Today / Pending / Done counts
+- [x] Search field wired to the filter provider (debounced)
 - [x] `filter_chips_bar.dart` — horizontal scrolling chips incl. categories
 - [x] Date grouping: Overdue · Today · Tomorrow · Later · Done (collapsed)
-- [ ] `empty_state.dart` — per-filter copy, delayed fade-in
-- [ ] `task_editor_sheet.dart` — draggable, keyboard-aware bottom sheet
+- [x] `empty_state.dart` — per-filter copy, delayed fade-in
+- [x] `task_editor_sheet.dart` — draggable, keyboard-aware bottom sheet
 - [x] Editor: title + notes fields with validation
 - [x] Editor: due date + time picker, clearable
 - [x] Editor: priority segmented control
 - [x] Editor: category picker with inline "create new"
 - [x] Editor handles both create and edit modes
-- [ ] Delete with undo `SnackBar` wired to soft-delete restore
+- [x] Delete with undo `SnackBar` wired to soft-delete restore
 - [ ] **Verify:** full CRUD round-trip survives app restart
 
 ### M4 — Subtasks and task detail

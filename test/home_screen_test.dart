@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:todo/features/tasks/data/task_dao.dart';
 import 'package:todo/features/tasks/domain/task.dart';
 import 'package:todo/features/tasks/providers/task_providers.dart';
 import 'package:todo/features/tasks/ui/home_screen.dart';
@@ -60,6 +61,61 @@ void main() {
 
     expect(find.text('Completed sample'), findsOneWidget);
   });
+
+  testWidgets('deleting a task offers undo and restores it', (tester) async {
+    final task = _task('delete-me', 'Task to delete');
+    final dao = _FakeTaskDao();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          taskDaoProvider.overrideWithValue(dao),
+          tasksProvider.overrideWith((ref) async => [task]),
+          filteredTasksProvider.overrideWith((ref) async => [task]),
+          categoriesProvider.overrideWith((ref) async => []),
+        ],
+        child: const MaterialApp(home: HomeScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Task to delete'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.delete_outline));
+    await tester.pumpAndSettle();
+
+    expect(dao.deletedTaskId, task.id);
+    expect(find.text('Task deleted'), findsOneWidget);
+
+    await tester.tap(find.text('Undo'));
+    await tester.pumpAndSettle();
+
+    expect(dao.restoredTaskId, task.id);
+  });
+
+  testWidgets('task editor opens in a draggable scrollable sheet', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          taskDaoProvider.overrideWithValue(_FakeTaskDao()),
+          tasksProvider.overrideWith((ref) async => []),
+          filteredTasksProvider.overrideWith((ref) async => []),
+          categoriesProvider.overrideWith((ref) async => []),
+        ],
+        child: const MaterialApp(home: HomeScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Add task'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('New task'), findsOneWidget);
+    expect(find.byType(DraggableScrollableSheet), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }
 
 Task _task(String id, String title, {int? dueAt, bool isDone = false}) {
@@ -74,4 +130,19 @@ Task _task(String id, String title, {int? dueAt, bool isDone = false}) {
     updatedAt: now,
     sortIndex: now.toDouble(),
   );
+}
+
+class _FakeTaskDao extends TaskDao {
+  String? deletedTaskId;
+  String? restoredTaskId;
+
+  @override
+  Future<void> softDelete(String taskId) async {
+    deletedTaskId = taskId;
+  }
+
+  @override
+  Future<void> restoreTask(String taskId) async {
+    restoredTaskId = taskId;
+  }
 }

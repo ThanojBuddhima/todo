@@ -90,4 +90,27 @@ void main() {
     expect(container.read(taskFilterProvider).categoryId, 'work');
     expect(container.read(taskFilterProvider).mode, TaskFilterMode.done);
   });
+
+  test('search query updates after the debounce interval', () async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    container.read(taskFilterProvider.notifier).setQuery('appointment');
+    expect(container.read(taskFilterProvider).query, isEmpty);
+
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    expect(container.read(taskFilterProvider).query, 'appointment');
+  });
+
+  test('reset cancels a pending search query', () async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    final controller = container.read(taskFilterProvider.notifier);
+    controller.setQuery('stale');
+    controller.reset();
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+
+    expect(container.read(taskFilterProvider).query, isEmpty);
+  });
 }

@@ -1,3 +1,4 @@
+import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 import 'package:todo/core/db/app_database.dart';
 import 'package:todo/features/tasks/domain/activity_action.dart';
@@ -16,7 +17,12 @@ class TaskDao {
 
   Future<Task?> getTaskById(String id) async {
     final db = await AppDatabase.instance.database;
-    final rows = await db.query('tasks', where: 'id = ?', whereArgs: [id], limit: 1);
+    final rows = await db.query(
+      'tasks',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
     if (rows.isEmpty) return null;
     return Task.fromMap(rows.first);
   }
@@ -81,12 +87,19 @@ class TaskDao {
     );
 
     await db.transaction((txn) async {
-      await txn.update('tasks', updatedTask.toMap(), where: 'id = ?', whereArgs: [task.id]);
+      await txn.update(
+        'tasks',
+        updatedTask.toMap(),
+        where: 'id = ?',
+        whereArgs: [task.id],
+      );
       await txn.insert('activity_log', {
         'task_id': task.id,
         'task_title': task.title,
         'category_name': task.categoryId,
-        'action': task.isDone ? ActivityAction.completed.value : ActivityAction.reopened.value,
+        'action': task.isDone
+            ? ActivityAction.completed.value
+            : ActivityAction.reopened.value,
         'field': 'done_state',
         'old_value': task.isDone ? '0' : '1',
         'new_value': task.isDone ? '1' : '0',
@@ -97,7 +110,12 @@ class TaskDao {
 
   Future<void> toggleDone(String taskId) async {
     final db = await AppDatabase.instance.database;
-    final row = (await db.query('tasks', where: 'id = ?', whereArgs: [taskId], limit: 1)).first;
+    final row = (await db.query(
+      'tasks',
+      where: 'id = ?',
+      whereArgs: [taskId],
+      limit: 1,
+    )).first;
     final task = Task.fromMap(row);
     final now = DateTime.now().millisecondsSinceEpoch;
     final updated = Task(
@@ -117,12 +135,19 @@ class TaskDao {
       deletedAt: task.deletedAt,
     );
     await db.transaction((txn) async {
-      await txn.update('tasks', updated.toMap(), where: 'id = ?', whereArgs: [task.id]);
+      await txn.update(
+        'tasks',
+        updated.toMap(),
+        where: 'id = ?',
+        whereArgs: [task.id],
+      );
       await txn.insert('activity_log', {
         'task_id': task.id,
         'task_title': task.title,
         'category_name': task.categoryId,
-        'action': updated.isDone ? ActivityAction.completed.value : ActivityAction.reopened.value,
+        'action': updated.isDone
+            ? ActivityAction.completed.value
+            : ActivityAction.reopened.value,
         'field': 'done_state',
         'old_value': task.isDone ? '1' : '0',
         'new_value': updated.isDone ? '1' : '0',
@@ -135,6 +160,20 @@ class TaskDao {
     final db = await AppDatabase.instance.database;
     final now = DateTime.now().millisecondsSinceEpoch;
     await db.transaction((txn) async {
+      final rows = await txn.query(
+        'tasks',
+        where: 'id = ?',
+        whereArgs: [taskId],
+        limit: 1,
+      );
+      if (rows.isEmpty) {
+        throw StateError('Cannot delete missing task "$taskId".');
+      }
+      final task = rows.first;
+      if (task['deleted_at'] != null) {
+        throw StateError('Task "$taskId" is already deleted.');
+      }
+
       await txn.update(
         'tasks',
         {'deleted_at': now, 'updated_at': now},
@@ -143,8 +182,11 @@ class TaskDao {
       );
       await txn.insert('activity_log', {
         'task_id': taskId,
-        'task_title': (await txn.query('tasks', where: 'id = ?', whereArgs: [taskId], limit: 1)).first['title'],
-        'category_name': null,
+        'task_title': task['title'],
+        'category_name': await _categoryName(
+          txn,
+          task['category_id'] as String?,
+        ),
         'action': ActivityAction.deleted.value,
         'field': 'status',
         'old_value': 'active',
@@ -158,6 +200,20 @@ class TaskDao {
     final db = await AppDatabase.instance.database;
     final now = DateTime.now().millisecondsSinceEpoch;
     await db.transaction((txn) async {
+      final rows = await txn.query(
+        'tasks',
+        where: 'id = ?',
+        whereArgs: [taskId],
+        limit: 1,
+      );
+      if (rows.isEmpty) {
+        throw StateError('Cannot restore missing task "$taskId".');
+      }
+      final task = rows.first;
+      if (task['deleted_at'] == null) {
+        throw StateError('Task "$taskId" is not deleted.');
+      }
+
       await txn.update(
         'tasks',
         {'deleted_at': null, 'updated_at': now},
@@ -166,8 +222,11 @@ class TaskDao {
       );
       await txn.insert('activity_log', {
         'task_id': taskId,
-        'task_title': (await txn.query('tasks', where: 'id = ?', whereArgs: [taskId], limit: 1)).first['title'],
-        'category_name': null,
+        'task_title': task['title'],
+        'category_name': await _categoryName(
+          txn,
+          task['category_id'] as String?,
+        ),
         'action': ActivityAction.restored.value,
         'field': 'status',
         'old_value': 'deleted',
@@ -175,5 +234,17 @@ class TaskDao {
         'occurred_at': now,
       });
     });
+  }
+
+  Future<String?> _categoryName(Transaction txn, String? categoryId) async {
+    if (categoryId == null) return null;
+    final categories = await txn.query(
+      'categories',
+      columns: ['name'],
+      where: 'id = ?',
+      whereArgs: [categoryId],
+      limit: 1,
+    );
+    return categories.isEmpty ? null : categories.first['name'] as String?;
   }
 }

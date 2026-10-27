@@ -45,122 +45,132 @@ class _TaskEditorSheetState extends ConsumerState<TaskEditorSheet> {
   Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(categoriesProvider);
 
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: 16,
-          right: 16,
-          top: 16,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  widget.task == null ? 'New task' : 'Edit task',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: titleController,
-              decoration: const InputDecoration(labelText: 'Title'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: notesController,
-              minLines: 3,
-              maxLines: 5,
-              decoration: const InputDecoration(labelText: 'Notes'),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _pickDateAndTime,
-                    icon: const Icon(Icons.calendar_today_outlined),
-                    label: Text(
-                      dueDate == null
-                          ? 'Add due date'
-                          : DateFormat('MMM d, y · h:mm a').format(dueDate!),
-                    ),
-                  ),
-                ),
-                if (dueDate != null)
-                  IconButton(
-                    onPressed: () => setState(() => dueDate = null),
-                    icon: const Icon(Icons.close),
-                    tooltip: 'Clear due date',
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            categoriesAsync.when(
-              data: (categories) => Row(
+    return DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.9,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      builder: (context, scrollController) => SafeArea(
+        child: SingleChildScrollView(
+          controller: scrollController,
+          padding: EdgeInsets.fromLTRB(
+            16,
+            16,
+            16,
+            MediaQuery.of(context).viewInsets.bottom + 16,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      initialValue:
-                          categories.any(
-                            (category) => category.id == categoryId,
-                          )
-                          ? categoryId
-                          : null,
-                      decoration: const InputDecoration(labelText: 'Category'),
-                      items: categories
-                          .map(
-                            (category) => DropdownMenuItem(
-                              value: category.id,
-                              child: Text(category.name),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) => setState(() => categoryId = value),
-                    ),
+                  Text(
+                    widget.task == null ? 'New task' : 'Edit task',
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
-                  const SizedBox(width: 8),
                   IconButton(
-                    onPressed: () => _createCategory(),
-                    icon: const Icon(Icons.add_circle_outline),
-                    tooltip: 'Add category',
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close),
                   ),
                 ],
               ),
-              loading: () => const SizedBox.shrink(),
-              error: (_, _) => const SizedBox.shrink(),
-            ),
-            const SizedBox(height: 12),
-            SegmentedButton<int>(
-              segments: const [
-                ButtonSegment(value: 0, label: Text('Low')),
-                ButtonSegment(value: 1, label: Text('Medium')),
-                ButtonSegment(value: 2, label: Text('High')),
-              ],
-              selected: {priority},
-              onSelectionChanged: (value) =>
-                  setState(() => priority = value.first),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: _submit,
-                icon: const Icon(Icons.save),
-                label: Text(
-                  widget.task == null ? 'Create task' : 'Save changes',
+              const SizedBox(height: 12),
+              TextField(
+                controller: titleController,
+                decoration: const InputDecoration(labelText: 'Title'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: notesController,
+                minLines: 3,
+                maxLines: 5,
+                decoration: const InputDecoration(labelText: 'Notes'),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _pickDateAndTime,
+                      icon: const Icon(Icons.calendar_today_outlined),
+                      label: Text(
+                        dueDate == null
+                            ? 'Add due date'
+                            : DateFormat('MMM d, y · h:mm a').format(dueDate!),
+                      ),
+                    ),
+                  ),
+                  if (dueDate != null)
+                    IconButton(
+                      onPressed: () => setState(() => dueDate = null),
+                      icon: const Icon(Icons.close),
+                      tooltip: 'Clear due date',
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              categoriesAsync.when(
+                data: (categories) => Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        initialValue:
+                            categories.any(
+                              (category) => category.id == categoryId,
+                            )
+                            ? categoryId
+                            : null,
+                        decoration: const InputDecoration(
+                          labelText: 'Category',
+                        ),
+                        items: categories
+                            .map(
+                              (category) => DropdownMenuItem(
+                                value: category.id,
+                                child: Text(category.name),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) =>
+                            setState(() => categoryId = value),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: () => _createCategory(),
+                      icon: const Icon(Icons.add_circle_outline),
+                      tooltip: 'Add category',
+                    ),
+                  ],
+                ),
+                loading: () => const SizedBox.shrink(),
+                error: (_, _) => const SizedBox.shrink(),
+              ),
+              const SizedBox(height: 12),
+              SegmentedButton<int>(
+                segments: const [
+                  ButtonSegment(value: 0, label: Text('Low')),
+                  ButtonSegment(value: 1, label: Text('Medium')),
+                  ButtonSegment(value: 2, label: Text('High')),
+                ],
+                selected: {priority},
+                onSelectionChanged: (value) =>
+                    setState(() => priority = value.first),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: _submit,
+                  icon: const Icon(Icons.save),
+                  label: Text(
+                    widget.task == null ? 'Create task' : 'Save changes',
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

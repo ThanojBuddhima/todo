@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:todo/features/tasks/data/activity_dao.dart';
 import 'package:todo/features/tasks/data/category_dao.dart';
@@ -25,6 +27,8 @@ final categoriesProvider = FutureProvider<List<Category>>((ref) async {
 class TaskFilterController extends StateNotifier<TaskFilter> {
   TaskFilterController() : super(const TaskFilter());
 
+  Timer? _queryDebounce;
+
   void setMode(TaskFilterMode mode) {
     state = state.copyWith(mode: mode);
   }
@@ -37,11 +41,21 @@ class TaskFilterController extends StateNotifier<TaskFilter> {
   }
 
   void setQuery(String query) {
-    state = state.copyWith(query: query);
+    _queryDebounce?.cancel();
+    _queryDebounce = Timer(const Duration(milliseconds: 250), () {
+      state = state.copyWith(query: query);
+    });
   }
 
   void reset() {
+    _queryDebounce?.cancel();
     state = const TaskFilter();
+  }
+
+  @override
+  void dispose() {
+    _queryDebounce?.cancel();
+    super.dispose();
   }
 }
 
