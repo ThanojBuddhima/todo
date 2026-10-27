@@ -25,7 +25,7 @@ both light and dark themes, and an exportable PDF report covering every recorded
 |---|---|---|---|
 | State | `flutter_riverpod` | 3.4.3 | Compile-safe, testable, no BuildContext juggling; async providers map cleanly onto DB reads |
 | Storage | `sqflite` | 2.4.5 | Local file DB. Relational is the right shape: tasks → subtasks → activity_log, with joins and date-range queries for the PDF |
-| PDF build | `pdf` | 3.13.1 | Builds the document in pure Dart |
+| PDF build | `pdf` | 3.11.3 | Builds the document in pure Dart; pinned for Dart 3.11 compatibility |
 | PDF share/print | `printing` | 5.15.1 | Native save / share / print sheet |
 | Paths | `path_provider` | 2.1.6 | App documents directory |
 | Share | `share_plus` | 13.3.1 | Share the generated file |
@@ -291,7 +291,7 @@ flutter build apk --release --split-per-abi
 Every box below is one unit of work. Tick `[x]` as it lands. Sections 0–10 above are the
 spec these tasks implement — the checklist is the only place that tracks progress.
 
-**Progress:** 45 / 132 done · current milestone: M7
+**Progress:** 47 / 132 done · current milestone: M7
 
 ### M0 — Environment and project setup
 
@@ -396,8 +396,8 @@ spec these tasks implement — the checklist is the only place that tracks progr
 ### M7 — PDF activity report
 
 - [ ] Load embedded Inter fonts for the PDF renderer
-- [ ] `pdf_report_builder.dart` skeleton — `MultiPage`, pure data in / `Uint8List` out
-- [ ] Cover block — app name, title, range, generated timestamp
+- [x] `pdf_report_builder.dart` skeleton — `MultiPage`, pure data in / `Uint8List` out
+- [x] Cover block — app name, title, range, generated timestamp
 - [ ] Summary — created / completed / deleted, completion rate, busiest day
 - [ ] Per-category breakdown bars drawn with `pdf` primitives
 - [ ] Activity table with repeating header + zebra rows
