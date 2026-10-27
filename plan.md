@@ -291,7 +291,7 @@ flutter build apk --release --split-per-abi
 Every box below is one unit of work. Tick `[x]` as it lands. Sections 0–10 above are the
 spec these tasks implement — the checklist is the only place that tracks progress.
 
-**Progress:** 35 / 132 done · current milestone: M5
+**Progress:** 36 / 132 done · current milestone: M5
 
 ### M0 — Environment and project setup
 
@@ -343,7 +343,7 @@ spec these tasks implement — the checklist is the only place that tracks progr
 
 - [ ] `task_providers.dart` — task list, filtered list, stat counts, single task
 - [x] `TaskFilter` model — All / Today / Upcoming / Pending / Done / category / search text
-- [ ] `task_card.dart` — title, notes preview, due chip, priority accent bar + dot, subtask count
+- [x] `task_card.dart` — title, notes preview, due chip, priority accent bar + dot, subtask count
 - [x] `home_screen.dart` — greeting, date, scaffold, FAB
 - [x] `stat_row.dart` — Today / Pending / Done counts
 - [x] Search field wired to the filter provider (debounced)

@@ -12,10 +12,10 @@ import 'package:todo/features/tasks/providers/task_providers.dart';
 import 'package:todo/features/tasks/ui/task_detail_screen.dart';
 import 'package:todo/features/tasks/ui/task_editor_sheet.dart';
 import 'package:todo/features/tasks/ui/widgets/empty_state.dart';
-import 'package:todo/features/tasks/ui/widgets/animated_checkbox.dart';
 import 'package:todo/features/tasks/ui/widgets/filter_chips_bar.dart';
 import 'package:todo/features/tasks/ui/widgets/stat_row.dart';
 import 'package:todo/features/tasks/ui/widgets/staggered_task_entrance.dart';
+import 'package:todo/features/tasks/ui/widgets/task_card.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -265,148 +265,61 @@ class _TaskCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final color = switch (task.priority) {
-      0 => AppColors.lowPriority,
-      2 => AppColors.highPriority,
-      _ => AppColors.mediumPriority,
-    };
-
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: task.isDone ? 1.0 : 0.0),
-      duration: AppMotion.duration(context, AppMotion.base),
-      builder: (context, desaturation, child) => ColorFiltered(
-        colorFilter: _desaturationFilter(desaturation),
-        child: Slidable(
-          key: ValueKey('slidable-${task.id}'),
-          startActionPane: ActionPane(
-            motion: const DrawerMotion(),
-            extentRatio: 0.25,
-            children: [
-              SlidableAction(
-                onPressed: (_) => _toggleTask(context, ref),
-                backgroundColor: AppColors.done,
-                foregroundColor: Colors.white,
-                icon: task.isDone ? Icons.undo : Icons.check,
-                label: task.isDone ? 'Reopen' : 'Complete',
-              ),
-            ],
+    return Slidable(
+      key: ValueKey('slidable-${task.id}'),
+      startActionPane: ActionPane(
+        motion: const DrawerMotion(),
+        extentRatio: 0.25,
+        children: [
+          SlidableAction(
+            onPressed: (_) => _toggleTask(context, ref),
+            backgroundColor: AppColors.done,
+            foregroundColor: Colors.white,
+            icon: task.isDone ? Icons.undo : Icons.check,
+            label: task.isDone ? 'Reopen' : 'Complete',
           ),
-          endActionPane: ActionPane(
-            motion: const DrawerMotion(),
-            extentRatio: 0.25,
-            children: [
-              SlidableAction(
-                onPressed: (_) => _deleteTask(context, ref),
-                backgroundColor: Theme.of(context).colorScheme.error,
-                foregroundColor: Theme.of(context).colorScheme.onError,
-                icon: Icons.delete_outline,
-                label: 'Delete',
-              ),
-            ],
+        ],
+      ),
+      endActionPane: ActionPane(
+        motion: const DrawerMotion(),
+        extentRatio: 0.25,
+        children: [
+          SlidableAction(
+            onPressed: (_) => _deleteTask(context, ref),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            foregroundColor: Theme.of(context).colorScheme.onError,
+            icon: Icons.delete_outline,
+            label: 'Delete',
           ),
-          child: Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () async {
-                final deletedTaskId = await Navigator.of(context).push<String>(
-                  PageRouteBuilder<String>(
-                    transitionDuration: AppMotion.duration(
-                      context,
-                      AppMotion.base,
-                    ),
-                    reverseTransitionDuration: AppMotion.duration(
-                      context,
-                      AppMotion.base,
-                    ),
-                    pageBuilder: (context, animation, secondaryAnimation) =>
-                        TaskDetailScreen(taskId: task.id),
-                    transitionsBuilder:
-                        (context, animation, secondaryAnimation, child) =>
-                            SharedAxisTransition(
-                              animation: animation,
-                              secondaryAnimation: secondaryAnimation,
-                              transitionType: SharedAxisTransitionType.scaled,
-                              child: child,
-                            ),
-                  ),
-                );
-                if (deletedTaskId != null && context.mounted) {
-                  await _showUndo(context, ref, deletedTaskId);
-                }
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 4,
-                      height: 52,
-                      decoration: BoxDecoration(
-                        color: color,
-                        borderRadius: BorderRadius.circular(99),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          AnimatedDefaultTextStyle(
-                            duration: AppMotion.duration(
-                              context,
-                              AppMotion.base,
-                            ),
-                            curve: AppMotion.emphasized,
-                            style:
-                                Theme.of(
-                                  context,
-                                ).textTheme.titleMedium?.copyWith(
-                                  decoration: task.isDone
-                                      ? TextDecoration.lineThrough
-                                      : null,
-                                  color: task.isDone
-                                      ? Theme.of(
-                                          context,
-                                        ).colorScheme.onSurfaceVariant
-                                      : null,
-                                ) ??
-                                const TextStyle(),
-                            child: Text(task.title),
-                          ),
-                          if (task.notes?.isNotEmpty ?? false) ...[
-                            const SizedBox(height: 6),
-                            Text(
-                              task.notes!,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                          if (task.dueAt != null) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              DateFormat('MMM d, y').format(
-                                DateTime.fromMillisecondsSinceEpoch(
-                                  task.dueAt!,
-                                ),
-                              ),
-                              style: Theme.of(context).textTheme.labelMedium,
-                            ),
-                          ],
-                          _SubtaskProgress(taskId: task.id),
-                        ],
-                      ),
-                    ),
-                    AnimatedCheckbox(
-                      value: task.isDone,
-                      onChanged: (_) => _toggleTask(context, ref),
-                    ),
-                  ],
-                ),
+        ],
+      ),
+      child: TaskCard(
+        task: task,
+        onTap: () async {
+          final deletedTaskId = await Navigator.of(context).push<String>(
+            PageRouteBuilder<String>(
+              transitionDuration: AppMotion.duration(context, AppMotion.base),
+              reverseTransitionDuration: AppMotion.duration(
+                context,
+                AppMotion.base,
               ),
+              pageBuilder: (context, animation, secondaryAnimation) =>
+                  TaskDetailScreen(taskId: task.id),
+              transitionsBuilder:
+                  (context, animation, secondaryAnimation, child) =>
+                      SharedAxisTransition(
+                        animation: animation,
+                        secondaryAnimation: secondaryAnimation,
+                        transitionType: SharedAxisTransitionType.scaled,
+                        child: child,
+                      ),
             ),
-          ),
-        ),
+          );
+          if (deletedTaskId != null && context.mounted) {
+            await _showUndo(context, ref, deletedTaskId);
+          }
+        },
+        onToggle: (_) => _toggleTask(context, ref),
       ),
     );
   }
@@ -464,69 +377,4 @@ class _TaskCard extends ConsumerWidget {
       );
   }
 
-  ColorFilter _desaturationFilter(double amount) {
-    const red = 0.2126;
-    const green = 0.7152;
-    const blue = 0.0722;
-    return ColorFilter.matrix([
-      1 - amount * (1 - red),
-      amount * green,
-      amount * blue,
-      0,
-      0,
-      amount * red,
-      1 - amount * (1 - green),
-      amount * blue,
-      0,
-      0,
-      amount * red,
-      amount * green,
-      1 - amount * (1 - blue),
-      0,
-      0,
-      0,
-      0,
-      0,
-      1,
-      0,
-    ]);
-  }
-}
-
-class _SubtaskProgress extends ConsumerWidget {
-  const _SubtaskProgress({required this.taskId});
-
-  final String taskId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final subtasksAsync = ref.watch(subtasksProvider(taskId));
-    return subtasksAsync.when(
-      loading: () => const SizedBox.shrink(),
-      error: (error, stackTrace) => Padding(
-        padding: const EdgeInsets.only(top: 6),
-        child: Text(
-          'Subtasks unavailable',
-          style: Theme.of(context).textTheme.labelSmall,
-        ),
-      ),
-      data: (subtasks) {
-        if (subtasks.isEmpty) return const SizedBox.shrink();
-        final doneCount = subtasks.where((subtask) => subtask.isDone).length;
-        return Padding(
-          padding: const EdgeInsets.only(top: 6),
-          child: Row(
-            children: [
-              const Icon(Icons.checklist, size: 16),
-              const SizedBox(width: 4),
-              Text(
-                '$doneCount/${subtasks.length} subtasks',
-                style: Theme.of(context).textTheme.labelSmall,
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
 }
