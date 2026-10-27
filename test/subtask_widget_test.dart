@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:todo/features/tasks/data/subtask_dao.dart';
+import 'package:todo/features/tasks/data/task_dao.dart';
 import 'package:todo/features/tasks/domain/subtask.dart';
+import 'package:todo/features/tasks/domain/task.dart';
 import 'package:todo/features/tasks/providers/task_providers.dart';
+import 'package:todo/features/tasks/ui/home_screen.dart';
 import 'package:todo/features/tasks/ui/widgets/task_subtasks_section.dart';
 
 void main() {
@@ -55,6 +58,58 @@ void main() {
     await tester.pumpAndSettle();
     expect(dao.items, isEmpty);
     expect(find.text('0/0'), findsOneWidget);
+  });
+
+  testWidgets('completing a subtask updates progress on detail and task card', (
+    tester,
+  ) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final task = Task(
+      id: 'task-progress',
+      title: 'Progress sample',
+      priority: 1,
+      isDone: false,
+      createdAt: now,
+      updatedAt: now,
+      sortIndex: now.toDouble(),
+    );
+    final dao = _FakeSubtaskDao()
+      ..items.addAll([
+        _subtask('first', task.id, 'First', isDone: true),
+        _subtask('second', task.id, 'Second'),
+      ]);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          taskDaoProvider.overrideWithValue(_FakeTaskDao(task)),
+          subtaskDaoProvider.overrideWithValue(dao),
+          tasksProvider.overrideWith((ref) async => [task]),
+          filteredTasksProvider.overrideWith((ref) async => [task]),
+          taskByIdProvider(task.id).overrideWith((ref) async => task),
+          subtasksProvider(
+            task.id,
+          ).overrideWith((ref) => dao.getForTask(task.id)),
+          taskActivityProvider(task.id).overrideWith((ref) async => const []),
+          categoriesProvider.overrideWith((ref) async => []),
+        ],
+        child: const MaterialApp(home: HomeScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('1/2 subtasks'), findsOneWidget);
+
+    await tester.tap(find.text('Progress sample').first);
+    await tester.pumpAndSettle();
+    expect(find.text('1/2'), findsOneWidget);
+
+    await tester.tap(find.byType(Checkbox).last);
+    await tester.pumpAndSettle();
+    expect(find.text('2/2'), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.text('2/2 subtasks'), findsOneWidget);
   });
 }
 
@@ -116,4 +171,29 @@ class _FakeSubtaskDao extends SubtaskDao {
     sortIndex: subtask.sortIndex,
     createdAt: subtask.createdAt,
   );
+}
+
+Subtask _subtask(
+  String id,
+  String taskId,
+  String title, {
+  bool isDone = false,
+}) {
+  return Subtask(
+    id: id,
+    taskId: taskId,
+    title: title,
+    isDone: isDone,
+    sortIndex: 0,
+    createdAt: DateTime.now().millisecondsSinceEpoch,
+  );
+}
+
+class _FakeTaskDao extends TaskDao {
+  _FakeTaskDao(this.task);
+
+  final Task task;
+
+  @override
+  Future<Task?> getTaskById(String id) async => id == task.id ? task : null;
 }

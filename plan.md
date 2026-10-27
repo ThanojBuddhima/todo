@@ -291,7 +291,7 @@ flutter build apk --release --split-per-abi
 Every box below is one unit of work. Tick `[x]` as it lands. Sections 0–10 above are the
 spec these tasks implement — the checklist is the only place that tracks progress.
 
-**Progress:** 26 / 132 done · current milestone: M4
+**Progress:** 31 / 132 done · current milestone: M5
 
 ### M0 — Environment and project setup
 
@@ -367,19 +367,19 @@ spec these tasks implement — the checklist is the only place that tracks progr
 - [x] `task_detail_screen.dart` — full task view
 - [x] Per-task activity trail on the detail screen
 - [x] Subtask reorder
-- [ ] **Verify:** completing a subtask updates the parent progress everywhere it shows
+- [x] **Verify:** completing a subtask updates the parent progress everywhere it shows
 
 ### M5 — Animation pass
 
-- [ ] Staggered list entrance: fade + 12px slide-up, 40ms/item, capped at 10
+- [x] Staggered list entrance: fade + 12px slide-up, 40ms/item, capped at 10
 - [ ] FAB → editor sheet container transform (`OpenContainer`)
-- [ ] `animated_checkbox.dart` — ring scale + path-trace check draw
-- [ ] Completion: card desaturate + animated strike-through + light haptic
+- [x] `animated_checkbox.dart` — ring scale + path-trace check draw
+- [x] Completion: card desaturate + animated strike-through + light haptic
 - [ ] Card animates out to the Done group on completion
 - [ ] `ReorderableListView` with lift animation (scale 1.03 + shadow)
 - [ ] `flutter_slidable`: swipe right → complete, swipe left → delete
 - [ ] Card → task detail container transform
-- [ ] Stat counts tween on change; progress ring animates
+- [x] Stat counts tween on change; progress ring animates
 - [ ] Reduced motion collapses all durations to zero
 - [ ] **Verify:** 60fps in profile mode on a real device, long list scrolled hard
 

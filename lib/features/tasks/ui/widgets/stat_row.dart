@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:todo/features/tasks/ui/widgets/animated_count.dart';
 
 class StatRow extends StatelessWidget {
   const StatRow({
@@ -44,7 +45,10 @@ class _StatCard extends StatelessWidget {
             children: [
               Text(label, style: theme.textTheme.labelLarge),
               const SizedBox(height: 8),
-              Text('$count', style: theme.textTheme.headlineMedium),
+              AnimatedCount(
+                value: count,
+                style: theme.textTheme.headlineMedium,
+              ),
             ],
           ),
         ),
