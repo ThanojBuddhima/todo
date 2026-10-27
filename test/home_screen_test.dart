@@ -288,6 +288,9 @@ class _FakeTaskDao extends TaskDao {
   String? toggledTaskId;
 
   @override
+  Future<Task?> getTaskById(String id) async => null;
+
+  @override
   Future<void> toggleDone(String taskId) async {
     toggledTaskId = taskId;
   }

@@ -33,6 +33,8 @@ class TaskDao {
     String? categoryId,
     int priority = 1,
     int? dueAt,
+    int? remindAt,
+    int? notificationId,
   }) async {
     final db = await AppDatabase.instance.database;
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -44,6 +46,8 @@ class TaskDao {
       categoryId: categoryId,
       priority: priority,
       dueAt: dueAt,
+      remindAt: remindAt,
+      notificationId: notificationId,
       isDone: false,
       createdAt: now,
       updatedAt: now,
@@ -106,6 +110,27 @@ class TaskDao {
         'occurred_at': now,
       });
     });
+  }
+
+  Future<void> updateReminder(
+    String taskId, {
+    required int? remindAt,
+    required int? notificationId,
+  }) async {
+    final db = await AppDatabase.instance.database;
+    final updated = await db.update(
+      'tasks',
+      {
+        'remind_at': remindAt,
+        'notification_id': notificationId,
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      where: 'id = ?',
+      whereArgs: [taskId],
+    );
+    if (updated == 0) {
+      throw StateError('Cannot update reminder for missing task "$taskId".');
+    }
   }
 
   Future<void> toggleDone(String taskId) async {
@@ -234,6 +259,27 @@ class TaskDao {
         'occurred_at': now,
       });
     });
+  }
+
+  Future<void> clearCompleted() async {
+    final db = await AppDatabase.instance.database;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.update('tasks', {
+      'deleted_at': now,
+      'updated_at': now,
+    }, where: 'is_done = 1 AND deleted_at IS NULL');
+  }
+
+  Future<void> purgeDeleted() async {
+    final db = await AppDatabase.instance.database;
+    await db.delete('tasks', where: 'deleted_at IS NOT NULL');
+  }
+
+  Future<void> wipeAll() async {
+    final db = await AppDatabase.instance.database;
+    await db.delete('activity_log');
+    await db.delete('subtasks');
+    await db.delete('tasks');
   }
 
   Future<String?> _categoryName(Transaction txn, String? categoryId) async {

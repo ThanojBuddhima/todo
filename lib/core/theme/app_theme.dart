@@ -3,9 +3,9 @@ import 'package:todo/core/theme/app_colors.dart';
 import 'package:todo/core/theme/app_typography.dart';
 
 class AppTheme {
-  static ThemeData light() {
+  static ThemeData light({Color? seed}) {
     final scheme = ColorScheme.fromSeed(
-      seedColor: AppColors.seed,
+      seedColor: seed ?? AppColors.seed,
       brightness: Brightness.light,
     );
     return ThemeData(
@@ -30,9 +30,9 @@ class AppTheme {
     );
   }
 
-  static ThemeData dark() {
+  static ThemeData dark({Color? seed}) {
     final scheme = ColorScheme.fromSeed(
-      seedColor: AppColors.seed,
+      seedColor: seed ?? AppColors.seed,
       brightness: Brightness.dark,
     );
     return ThemeData(

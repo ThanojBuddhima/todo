@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:todo/core/theme/app_colors.dart';
 import 'package:todo/core/theme/motion.dart';
 import 'package:todo/core/utils/date_x.dart';
+import 'package:todo/features/reminders/notification_service.dart';
 import 'package:todo/features/tasks/domain/task.dart';
 import 'package:todo/features/tasks/domain/task_filter.dart';
 import 'package:todo/features/tasks/providers/task_providers.dart';
@@ -333,7 +334,8 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
   }
 
   Future<void> _toggleTask() async {
-    if (!widget.task.isDone) {
+    final wasDone = widget.task.isDone;
+    if (!wasDone) {
       setState(() => _isExiting = true);
       await Future<void>.delayed(AppMotion.duration(context, AppMotion.base));
       if (!mounted) return;
@@ -348,6 +350,23 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Could not update task: $error')));
+      return;
+    }
+
+    try {
+      final notificationService = ref.read(notificationServiceProvider);
+      if (wasDone) {
+        await _schedulePersistedReminder(widget.task);
+      } else if (widget.task.notificationId != null) {
+        await notificationService.cancelReminder(widget.task.notificationId!);
+      }
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Task updated, but its reminder failed: $error'),
+        ),
+      );
     }
   }
 
@@ -355,13 +374,31 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     try {
       await ref.read(taskDaoProvider).softDelete(widget.task.id);
       ref.invalidate(tasksProvider);
-      if (context.mounted) await _showUndo(context, widget.task.id);
     } catch (error) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Could not delete task: $error')));
+      return;
     }
+
+    if (widget.task.notificationId != null) {
+      try {
+        await ref
+            .read(notificationServiceProvider)
+            .cancelReminder(widget.task.notificationId!);
+      } catch (error) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Task deleted, but its reminder could not be canceled: $error',
+            ),
+          ),
+        );
+      }
+    }
+    if (context.mounted) await _showUndo(context, widget.task.id);
   }
 
   Future<void> _showUndo(BuildContext context, String taskId) async {
@@ -381,10 +418,65 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Could not restore task: $error')),
                 );
+                return;
+              }
+
+              try {
+                final restoredTask = await ref
+                    .read(taskDaoProvider)
+                    .getTaskById(taskId);
+                if (restoredTask != null) {
+                  await _schedulePersistedReminder(restoredTask);
+                }
+              } catch (error) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Task restored, but its reminder could not be scheduled: $error',
+                    ),
+                  ),
+                );
               }
             },
           ),
         ),
       );
+  }
+
+  Future<void> _schedulePersistedReminder(Task task) async {
+    final remindAt = task.remindAt;
+    if (remindAt == null ||
+        !DateTime.fromMillisecondsSinceEpoch(
+          remindAt,
+        ).isAfter(DateTime.now())) {
+      return;
+    }
+
+    final notificationId =
+        task.notificationId ?? NotificationService.generateNotificationId();
+    if (task.notificationId == null) {
+      await ref
+          .read(taskDaoProvider)
+          .updateReminder(
+            task.id,
+            remindAt: remindAt,
+            notificationId: notificationId,
+          );
+    }
+    final notificationService = ref.read(notificationServiceProvider);
+    final precision = await notificationService.currentSchedulePrecision();
+    await notificationService.scheduleReminder(
+      id: notificationId,
+      title: task.title,
+      remindAt: DateTime.fromMillisecondsSinceEpoch(remindAt),
+      taskId: task.id,
+      precision: precision,
+    );
+    if (precision == ReminderSchedulePrecision.inexact && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Reminder restored with inexact timing.')),
+      );
+    }
   }
 }

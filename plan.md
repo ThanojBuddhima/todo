@@ -291,7 +291,7 @@ flutter build apk --release --split-per-abi
 Every box below is one unit of work. Tick `[x]` as it lands. Sections 0–10 above are the
 spec these tasks implement — the checklist is the only place that tracks progress.
 
-**Progress:** 63 / 132 done · current milestone: M7
+**Progress:** 74 / 132 done · current milestone: M9
 
 ### M0 — Environment and project setup
 
@@ -431,17 +431,17 @@ spec these tasks implement — the checklist is the only place that tracks progr
 
 ### M9 — App lock and settings
 
-- [ ] `lock_service.dart` — salted SHA-256 PIN hash in `flutter_secure_storage`
-- [ ] Biometric auth via `local_auth`, `biometricOnly: false`
-- [ ] `lock_screen.dart` — PIN entry + biometric prompt
-- [ ] Root lock gate watching `AppLifecycleState`, 60s background timeout
-- [ ] `settings_screen.dart` — theme mode selector
-- [ ] Settings: accent seed choice
-- [ ] Settings: app lock toggle + PIN setup / change flow
-- [ ] Settings: notification permission status + shortcut to system settings
-- [ ] Settings: clear completed, purge deleted
-- [ ] Settings: wipe all data behind a typed confirmation
-- [ ] Settings: about section (version, "works fully offline")
+- [x] `lock_service.dart` — salted SHA-256 PIN hash in `flutter_secure_storage`
+- [x] Biometric auth via `local_auth`, `biometricOnly: false`
+- [x] `lock_screen.dart` — PIN entry + biometric prompt
+- [x] Root lock gate watching `AppLifecycleState`, 60s background timeout
+- [x] `settings_screen.dart` — theme mode selector
+- [x] Settings: accent seed choice
+- [x] Settings: app lock toggle + PIN setup / change flow
+- [x] Settings: notification permission status + shortcut to system settings
+- [x] Settings: clear completed, purge deleted
+- [x] Settings: wipe all data behind a typed confirmation
+- [x] Settings: about section (version, "works fully offline")
 - [ ] **Verify:** lock holds across background → resume and cold start
 
 ### M10 — Release

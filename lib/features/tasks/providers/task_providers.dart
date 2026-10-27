@@ -11,11 +11,15 @@ import 'package:todo/features/tasks/domain/activity_entry.dart';
 import 'package:todo/features/tasks/domain/subtask.dart';
 import 'package:todo/features/tasks/domain/task.dart';
 import 'package:todo/features/tasks/domain/task_filter.dart';
+import 'package:todo/features/reminders/notification_service.dart';
 
 final taskDaoProvider = Provider<TaskDao>((ref) => TaskDao());
 final activityDaoProvider = Provider<ActivityDao>((ref) => ActivityDao());
 final categoryDaoProvider = Provider<CategoryDao>((ref) => CategoryDao());
 final subtaskDaoProvider = Provider<SubtaskDao>((ref) => SubtaskDao());
+final notificationServiceProvider = Provider<NotificationService>(
+  (ref) => NotificationService.instance,
+);
 
 final tasksProvider = FutureProvider<List<Task>>((ref) async {
   final dao = ref.watch(taskDaoProvider);

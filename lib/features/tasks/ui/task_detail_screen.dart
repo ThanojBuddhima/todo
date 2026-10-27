@@ -24,14 +24,35 @@ class TaskDetailScreen extends ConsumerWidget {
           IconButton(
             tooltip: 'Delete task',
             onPressed: () async {
+              final dao = ref.read(taskDaoProvider);
+              final task = await dao.getTaskById(taskId);
               try {
-                await ref.read(taskDaoProvider).softDelete(taskId);
-                if (context.mounted) Navigator.of(context).pop(taskId);
+                await dao.softDelete(taskId);
               } catch (error) {
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Could not delete task: $error')),
                 );
+                return;
+              }
+              if (task != null && task.notificationId != null) {
+                try {
+                  await ref
+                      .read(notificationServiceProvider)
+                      .cancelReminder(task.notificationId!);
+                } catch (error) {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Task deleted, but its reminder could not be canceled: $error',
+                      ),
+                    ),
+                  );
+                }
+              }
+              if (context.mounted) {
+                Navigator.of(context).pop(taskId);
               }
             },
             icon: const Icon(Icons.delete_outline),
