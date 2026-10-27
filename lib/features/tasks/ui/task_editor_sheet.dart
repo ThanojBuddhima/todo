@@ -314,9 +314,23 @@ class _TaskEditorSheetState extends ConsumerState<TaskEditorSheet> {
 
     final dao = ref.read(taskDaoProvider);
     final notificationService = ref.read(notificationServiceProvider);
-    var reminderPrecision = remindAt == null
-        ? null
-        : await notificationService.requestReminderPermission();
+    ReminderSchedulePrecision? reminderPrecision;
+    if (remindAt != null) {
+      try {
+        reminderPrecision = await notificationService.requestReminderPermission();
+      } on PlatformException catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Could not request reminder permission: ${error.message ?? error.code}',
+              ),
+            ),
+          );
+        }
+        return;
+      }
+    }
     final reminderPermissionDenied =
         remindAt != null && reminderPrecision == null;
     final savedRemindAt = reminderPrecision == null ? null : remindAt;
@@ -376,7 +390,19 @@ class _TaskEditorSheetState extends ConsumerState<TaskEditorSheet> {
           dao: dao,
         );
       } else if (oldNotificationId != null) {
-        await notificationService.cancelReminder(oldNotificationId);
+        try {
+          await notificationService.cancelReminder(oldNotificationId);
+        } on PlatformException catch (error) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Task saved, but its previous reminder could not be canceled: ${error.message ?? error.code}',
+                ),
+              ),
+            );
+          }
+        }
       }
     }
 
@@ -423,13 +449,17 @@ class _TaskEditorSheetState extends ConsumerState<TaskEditorSheet> {
       return precision;
     } on PlatformException catch (error) {
       await dao.updateReminder(taskId, remindAt: null, notificationId: null);
+      var message =
+          'Task saved, but its reminder failed: ${error.message ?? error.code}';
+      try {
+        await service.cancelReminder(notificationId);
+      } on PlatformException catch (cancelError) {
+        message =
+            'Task saved, but the reminder failed and its previous notification could not be canceled: ${cancelError.message ?? cancelError.code}';
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Task saved, but its reminder failed: ${error.message ?? error.code}',
-            ),
-          ),
+          SnackBar(content: Text(message)),
         );
       }
       return null;

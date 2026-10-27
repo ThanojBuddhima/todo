@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:todo/features/tasks/domain/activity_action.dart';
 import 'package:todo/features/tasks/domain/activity_entry.dart';
+import 'package:todo/features/tasks/domain/task.dart';
 import 'package:todo/features/tasks/providers/task_providers.dart';
 import 'package:todo/features/tasks/ui/task_editor_sheet.dart';
 import 'package:todo/features/tasks/ui/widgets/task_subtasks_section.dart';
@@ -25,8 +26,9 @@ class TaskDetailScreen extends ConsumerWidget {
             tooltip: 'Delete task',
             onPressed: () async {
               final dao = ref.read(taskDaoProvider);
-              final task = await dao.getTaskById(taskId);
+              Task? task;
               try {
+                task = await dao.getTaskById(taskId);
                 await dao.softDelete(taskId);
               } catch (error) {
                 if (!context.mounted) return;

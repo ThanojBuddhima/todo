@@ -105,6 +105,19 @@ void main() {
       );
     },
   );
+
+  test('cancels every pending reminder when data is wiped', () async {
+    final driver = _FakeNotificationDriver();
+    final service = NotificationService(
+      driver: driver,
+      timezoneName: () async => 'America/Los_Angeles',
+    );
+    await service.initialize();
+
+    await service.cancelAllReminders();
+
+    expect(driver.cancelAllRequested, isTrue);
+  });
 }
 
 class _FakeNotificationDriver implements LocalNotificationDriver {
@@ -120,6 +133,7 @@ class _FakeNotificationDriver implements LocalNotificationDriver {
   int initializeCount = 0;
   int channelCount = 0;
   bool exactPermissionRequested = false;
+  bool cancelAllRequested = false;
   NotificationTapHandler? onNotificationTap;
   DateTime? scheduledAt;
   String? scheduledPayload;
@@ -141,6 +155,9 @@ class _FakeNotificationDriver implements LocalNotificationDriver {
 
   @override
   Future<bool> requestNotificationPermission() async => notificationPermission;
+
+  @override
+  Future<bool> areNotificationsEnabled() async => notificationPermission;
 
   @override
   Future<bool> canScheduleExactNotifications() async => canScheduleExactly;
@@ -166,4 +183,9 @@ class _FakeNotificationDriver implements LocalNotificationDriver {
 
   @override
   Future<void> cancel(int id) async {}
+
+  @override
+  Future<void> cancelAll() async {
+    cancelAllRequested = true;
+  }
 }

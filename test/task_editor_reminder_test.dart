@@ -53,7 +53,10 @@ void main() {
 
     expect(dao.updatedTask?.remindAt, remindAt.millisecondsSinceEpoch);
     expect(dao.updatedTask?.notificationId, 42);
-    expect(driver.scheduledAt, remindAt);
+    expect(
+      driver.scheduledAt,
+      DateTime.fromMillisecondsSinceEpoch(remindAt.millisecondsSinceEpoch),
+    );
     expect(driver.scheduledPayload, task.id);
   });
 }
@@ -98,6 +101,9 @@ class _FakeNotificationDriver implements LocalNotificationDriver {
   Future<bool> requestNotificationPermission() async => true;
 
   @override
+  Future<bool> areNotificationsEnabled() async => true;
+
+  @override
   Future<bool> canScheduleExactNotifications() async => true;
 
   @override
@@ -117,4 +123,7 @@ class _FakeNotificationDriver implements LocalNotificationDriver {
 
   @override
   Future<void> cancel(int id) async {}
+
+  @override
+  Future<void> cancelAll() async {}
 }

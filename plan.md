@@ -291,7 +291,7 @@ flutter build apk --release --split-per-abi
 Every box below is one unit of work. Tick `[x]` as it lands. Sections 0–10 above are the
 spec these tasks implement — the checklist is the only place that tracks progress.
 
-**Progress:** 74 / 132 done · current milestone: M9
+**Progress:** 84 / 132 done · current milestone: M9
 
 ### M0 — Environment and project setup
 
@@ -417,16 +417,16 @@ spec these tasks implement — the checklist is the only place that tracks progr
 
 ### M8 — Reminders
 
-- [ ] `notification_service.dart` singleton, initialized before `runApp`
-- [ ] Android notification channel created at init
-- [ ] Timezone init via `flutter_timezone`
-- [ ] `zonedSchedule` with `AndroidScheduleMode.exactAllowWhileIdle`
-- [ ] Lazy `POST_NOTIFICATIONS` request on first reminder toggle
-- [ ] Inexact-alarm fallback with a visible notice in the editor sheet
-- [ ] Store `notification_id` on the task; reschedule on edit, cancel on delete
-- [ ] Reminder toggle + time picker in the editor sheet
-- [ ] Tapping a notification deep-links to that task's detail screen
-- [ ] Reschedule pending reminders after a device reboot (`BOOT_COMPLETED` receiver)
+- [x] `notification_service.dart` singleton, initialized before `runApp`
+- [x] Android notification channel created at init
+- [x] Timezone init via `flutter_timezone`
+- [x] `zonedSchedule` with `AndroidScheduleMode.exactAllowWhileIdle`
+- [x] Lazy `POST_NOTIFICATIONS` request on first reminder toggle
+- [x] Inexact-alarm fallback with a visible notice in the editor sheet
+- [x] Store `notification_id` on the task; reschedule on edit, cancel on delete
+- [x] Reminder toggle + time picker in the editor sheet
+- [x] Tapping a notification deep-links to that task's detail screen
+- [x] Reschedule pending reminders after a device reboot (`BOOT_COMPLETED` receiver)
 - [ ] **Verify:** a scheduled notification fires with the app closed
 
 ### M9 — App lock and settings

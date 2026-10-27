@@ -1,11 +1,11 @@
 import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:todo/features/security/lock_service.dart';
 import 'package:todo/features/security/providers/lock_providers.dart';
 import 'package:todo/features/settings/providers/settings_providers.dart';
 import 'package:todo/features/tasks/data/task_dao.dart';
+import 'package:todo/features/tasks/providers/task_providers.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -32,13 +32,24 @@ class SettingsScreen extends ConsumerWidget {
                     value: mode,
                     underline: const SizedBox(),
                     items: const [
-                      DropdownMenuItem(value: ThemeMode.system, child: Text('System')),
-                      DropdownMenuItem(value: ThemeMode.light, child: Text('Light')),
-                      DropdownMenuItem(value: ThemeMode.dark, child: Text('Dark')),
+                      DropdownMenuItem(
+                        value: ThemeMode.system,
+                        child: Text('System'),
+                      ),
+                      DropdownMenuItem(
+                        value: ThemeMode.light,
+                        child: Text('Light'),
+                      ),
+                      DropdownMenuItem(
+                        value: ThemeMode.dark,
+                        child: Text('Dark'),
+                      ),
                     ],
                     onChanged: (value) async {
                       if (value != null) {
-                        await ref.read(themeModeProvider.notifier).setThemeMode(value);
+                        await ref
+                            .read(themeModeProvider.notifier)
+                            .setThemeMode(value);
                       }
                     },
                   ),
@@ -50,9 +61,12 @@ class SettingsScreen extends ConsumerWidget {
                     padding: const EdgeInsets.only(top: 8),
                     child: Row(
                       children: accentSeeds.map((color) {
-                        final selected = color.toARGB32() == accentSeed.toARGB32();
+                        final selected =
+                            color.toARGB32() == accentSeed.toARGB32();
                         return GestureDetector(
-                          onTap: () => ref.read(accentSeedProvider.notifier).setSeed(color),
+                          onTap: () => ref
+                              .read(accentSeedProvider.notifier)
+                              .setSeed(color),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 150),
                             margin: const EdgeInsets.only(right: 10),
@@ -62,11 +76,20 @@ class SettingsScreen extends ConsumerWidget {
                               color: color,
                               shape: BoxShape.circle,
                               border: selected
-                                  ? Border.all(color: Theme.of(context).colorScheme.onSurface, width: 3)
+                                  ? Border.all(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface,
+                                      width: 3,
+                                    )
                                   : null,
                             ),
                             child: selected
-                                ? const Icon(Icons.check, size: 16, color: Colors.white)
+                                ? const Icon(
+                                    Icons.check,
+                                    size: 16,
+                                    color: Colors.white,
+                                  )
                                 : null,
                           ),
                         );
@@ -79,17 +102,21 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           _SectionHeader('Notifications'),
-          Card(
-            child: _NotificationPermissionTile(),
-          ),
+          Card(child: _NotificationPermissionTile()),
           const SizedBox(height: 16),
           _SectionHeader('Security'),
           Card(
             child: Column(
               children: [
                 lockAsync.when(
-                  loading: () => const ListTile(title: Text('App Lock'), trailing: CircularProgressIndicator()),
-                  error: (err, st) => const ListTile(title: Text('App Lock'), subtitle: Text('Unavailable')),
+                  loading: () => const ListTile(
+                    title: Text('App Lock'),
+                    trailing: CircularProgressIndicator(),
+                  ),
+                  error: (err, st) => const ListTile(
+                    title: Text('App Lock'),
+                    subtitle: Text('Unavailable'),
+                  ),
                   data: (enabled) => SwitchListTile(
                     title: const Text('App Lock'),
                     subtitle: const Text('Require PIN or biometrics to open'),
@@ -121,15 +148,25 @@ class SettingsScreen extends ConsumerWidget {
                 ListTile(
                   leading: const Icon(Icons.delete_sweep_outlined),
                   title: const Text('Purge deleted tasks'),
-                  subtitle: const Text('Permanently removes soft-deleted tasks'),
+                  subtitle: const Text(
+                    'Permanently removes soft-deleted tasks',
+                  ),
                   onTap: () => _purgeDeleted(context),
                 ),
                 const Divider(height: 1),
                 ListTile(
-                  leading: Icon(Icons.warning_amber_outlined, color: Theme.of(context).colorScheme.error),
-                  title: Text('Wipe all data', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                  leading: Icon(
+                    Icons.warning_amber_outlined,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                  title: Text(
+                    'Wipe all data',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
                   subtitle: const Text('Permanently deletes everything'),
-                  onTap: () => _wipeAll(context),
+                  onTap: () => _wipeAll(context, ref),
                 ),
               ],
             ),
@@ -142,7 +179,9 @@ class SettingsScreen extends ConsumerWidget {
                 ListTile(
                   leading: Icon(Icons.offline_bolt_outlined),
                   title: Text('Works fully offline'),
-                  subtitle: Text('All data stays on your device. No internet required.'),
+                  subtitle: Text(
+                    'All data stays on your device. No internet required.',
+                  ),
                 ),
               ],
             ),
@@ -152,7 +191,11 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _onLockToggled(BuildContext context, WidgetRef ref, bool enable) async {
+  Future<void> _onLockToggled(
+    BuildContext context,
+    WidgetRef ref,
+    bool enable,
+  ) async {
     if (enable) {
       final hasPin = await LockService.instance.hasPinSet;
       if (!hasPin) {
@@ -166,7 +209,11 @@ class SettingsScreen extends ConsumerWidget {
     }
   }
 
-  Future<bool> _showPinSetup(BuildContext context, WidgetRef ref, {required bool isChange}) async {
+  Future<bool> _showPinSetup(
+    BuildContext context,
+    WidgetRef ref, {
+    required bool isChange,
+  }) async {
     final result = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -176,46 +223,78 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   Future<void> _clearCompleted(BuildContext context) async {
-    final ok = await _confirm(context, 'Clear completed tasks?',
-        'All completed tasks will be soft-deleted. They can still be restored from deleted tasks.');
+    final ok = await _confirm(
+      context,
+      'Clear completed tasks?',
+      'All completed tasks will be soft-deleted. They can still be restored from deleted tasks.',
+    );
     if (!ok) return;
     await TaskDao().clearCompleted();
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Completed tasks cleared')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Completed tasks cleared')));
     }
   }
 
   Future<void> _purgeDeleted(BuildContext context) async {
-    final ok = await _confirm(context, 'Purge deleted tasks?',
-        'All soft-deleted tasks will be permanently removed. This cannot be undone.');
+    final ok = await _confirm(
+      context,
+      'Purge deleted tasks?',
+      'All soft-deleted tasks will be permanently removed. This cannot be undone.',
+    );
     if (!ok) return;
     await TaskDao().purgeDeleted();
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Deleted tasks purged')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Deleted tasks purged')));
     }
   }
 
-  Future<void> _wipeAll(BuildContext context) async {
+  Future<void> _wipeAll(BuildContext context, WidgetRef ref) async {
     final confirmed = await showDialog<String>(
       context: context,
       builder: (ctx) => _WipeConfirmDialog(),
     );
     if (confirmed != 'WIPE') return;
-    await TaskDao().wipeAll();
+    try {
+      await ref.read(notificationServiceProvider).cancelAllReminders();
+      await TaskDao().wipeAll();
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not delete all data: $error')),
+        );
+      }
+      return;
+    }
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('All data deleted')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('All data deleted')));
     }
   }
 
-  Future<bool> _confirm(BuildContext context, String title, String message) async {
+  Future<bool> _confirm(
+    BuildContext context,
+    String title,
+    String message,
+  ) async {
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(title),
         content: Text(message),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Confirm')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Confirm'),
+          ),
         ],
       ),
     );
@@ -223,12 +302,14 @@ class SettingsScreen extends ConsumerWidget {
   }
 }
 
-class _NotificationPermissionTile extends StatefulWidget {
+class _NotificationPermissionTile extends ConsumerStatefulWidget {
   @override
-  State<_NotificationPermissionTile> createState() => _NotificationPermissionTileState();
+  ConsumerState<_NotificationPermissionTile> createState() =>
+      _NotificationPermissionTileState();
 }
 
-class _NotificationPermissionTileState extends State<_NotificationPermissionTile> {
+class _NotificationPermissionTileState
+    extends ConsumerState<_NotificationPermissionTile> {
   bool? _granted;
 
   @override
@@ -238,9 +319,9 @@ class _NotificationPermissionTileState extends State<_NotificationPermissionTile
   }
 
   Future<void> _check() async {
-    final plugin = FlutterLocalNotificationsPlugin();
-    final android = plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-    final granted = await android?.areNotificationsEnabled() ?? false;
+    final granted = await ref
+        .read(notificationServiceProvider)
+        .areNotificationsEnabled();
     if (mounted) setState(() => _granted = granted);
   }
 
@@ -250,19 +331,25 @@ class _NotificationPermissionTileState extends State<_NotificationPermissionTile
     final granted = _granted;
     return ListTile(
       leading: Icon(
-        granted == true ? Icons.notifications_active_outlined : Icons.notifications_off_outlined,
+        granted == true
+            ? Icons.notifications_active_outlined
+            : Icons.notifications_off_outlined,
         color: granted == true ? cs.primary : cs.error,
       ),
       title: const Text('Notifications'),
-      subtitle: Text(granted == null
-          ? 'Checking…'
-          : granted
-              ? 'Enabled'
-              : 'Disabled — tap to open settings'),
+      subtitle: Text(
+        granted == null
+            ? 'Checking…'
+            : granted
+            ? 'Enabled'
+            : 'Disabled — tap to open settings',
+      ),
       trailing: granted == false
           ? TextButton(
               onPressed: () async {
-                await AppSettings.openAppSettings(type: AppSettingsType.notification);
+                await AppSettings.openAppSettings(
+                  type: AppSettingsType.notification,
+                );
                 await Future.delayed(const Duration(milliseconds: 500));
                 _check();
               },
@@ -284,9 +371,9 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         label.toUpperCase(),
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              letterSpacing: 1.2,
-              color: Theme.of(context).colorScheme.primary,
-            ),
+          letterSpacing: 1.2,
+          color: Theme.of(context).colorScheme.primary,
+        ),
       ),
     );
   }
@@ -359,7 +446,10 @@ class _PinSetupSheetState extends State<_PinSetupSheet> {
           if (widget.isChange) ...[
             TextField(
               controller: _oldPinCtrl,
-              decoration: const InputDecoration(labelText: 'Current PIN', border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                labelText: 'Current PIN',
+                border: OutlineInputBorder(),
+              ),
               keyboardType: TextInputType.number,
               obscureText: true,
               maxLength: 8,
@@ -368,7 +458,10 @@ class _PinSetupSheetState extends State<_PinSetupSheet> {
           ],
           TextField(
             controller: _pinCtrl,
-            decoration: const InputDecoration(labelText: 'New PIN', border: OutlineInputBorder()),
+            decoration: const InputDecoration(
+              labelText: 'New PIN',
+              border: OutlineInputBorder(),
+            ),
             keyboardType: TextInputType.number,
             obscureText: true,
             maxLength: 8,
@@ -376,20 +469,29 @@ class _PinSetupSheetState extends State<_PinSetupSheet> {
           const SizedBox(height: 12),
           TextField(
             controller: _confirmCtrl,
-            decoration: const InputDecoration(labelText: 'Confirm PIN', border: OutlineInputBorder()),
+            decoration: const InputDecoration(
+              labelText: 'Confirm PIN',
+              border: OutlineInputBorder(),
+            ),
             keyboardType: TextInputType.number,
             obscureText: true,
             maxLength: 8,
           ),
           if (_error.isNotEmpty) ...[
             const SizedBox(height: 8),
-            Text(_error, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            Text(
+              _error,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
           ],
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
               const SizedBox(width: 8),
               FilledButton(onPressed: _save, child: const Text('Save')),
             ],
@@ -428,15 +530,23 @@ class _WipeConfirmDialogState extends State<_WipeConfirmDialog> {
           const SizedBox(height: 16),
           TextField(
             controller: _ctrl,
-            decoration: const InputDecoration(hintText: 'Type WIPE', border: OutlineInputBorder()),
+            decoration: const InputDecoration(
+              hintText: 'Type WIPE',
+              border: OutlineInputBorder(),
+            ),
             onChanged: (_) => setState(() {}),
           ),
         ],
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context, null), child: const Text('Cancel')),
+        TextButton(
+          onPressed: () => Navigator.pop(context, null),
+          child: const Text('Cancel'),
+        ),
         FilledButton(
-          onPressed: _ctrl.text == 'WIPE' ? () => Navigator.pop(context, 'WIPE') : null,
+          onPressed: _ctrl.text == 'WIPE'
+              ? () => Navigator.pop(context, 'WIPE')
+              : null,
           child: const Text('Wipe'),
         ),
       ],

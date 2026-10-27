@@ -15,6 +15,7 @@ abstract interface class LocalNotificationDriver {
   });
   Future<void> createReminderChannel();
   Future<bool> requestNotificationPermission();
+  Future<bool> areNotificationsEnabled();
   Future<bool> canScheduleExactNotifications();
   Future<bool> requestExactAlarmPermission();
   Future<void> schedule({
@@ -25,6 +26,7 @@ abstract interface class LocalNotificationDriver {
     required ReminderSchedulePrecision precision,
   });
   Future<void> cancel(int id);
+  Future<void> cancelAll();
 }
 
 class NotificationService {
@@ -91,6 +93,11 @@ class NotificationService {
     return _getSchedulePrecision(requestPermission: false);
   }
 
+  Future<bool> areNotificationsEnabled() {
+    _ensureInitialized();
+    return _driver.areNotificationsEnabled();
+  }
+
   Future<ReminderSchedulePrecision> _getSchedulePrecision({
     required bool requestPermission,
   }) async {
@@ -128,6 +135,11 @@ class NotificationService {
   Future<void> cancelReminder(int id) async {
     _ensureInitialized();
     await _driver.cancel(id);
+  }
+
+  Future<void> cancelAllReminders() async {
+    _ensureInitialized();
+    await _driver.cancelAll();
   }
 
   void _ensureInitialized() {
@@ -222,6 +234,25 @@ class _FlutterLocalNotificationDriver implements LocalNotificationDriver {
   }
 
   @override
+  Future<bool> areNotificationsEnabled() async {
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    if (android != null) {
+      return await android.areNotificationsEnabled() ?? false;
+    }
+    final ios = _plugin
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
+    if (ios != null) {
+      return (await ios.checkPermissions())?.isEnabled ?? false;
+    }
+    throw UnsupportedError('Notifications are unavailable on this platform.');
+  }
+
+  @override
   Future<bool> canScheduleExactNotifications() async {
     final android = _plugin
         .resolvePlatformSpecificImplementation<
@@ -271,4 +302,7 @@ class _FlutterLocalNotificationDriver implements LocalNotificationDriver {
 
   @override
   Future<void> cancel(int id) => _plugin.cancel(id: id);
+
+  @override
+  Future<void> cancelAll() => _plugin.cancelAll();
 }
