@@ -48,7 +48,7 @@ class TimelineTile extends StatelessWidget {
                           borderRadius: BorderRadius.circular(99),
                         ),
                         child: Text(
-                          _actionLabel(action),
+                          labelFor(action),
                           style: Theme.of(context).textTheme.labelSmall
                               ?.copyWith(color: color),
                         ),
@@ -115,7 +115,7 @@ class TimelineTile extends StatelessWidget {
     };
   }
 
-  static String _actionLabel(ActivityAction action) {
+  static String labelFor(ActivityAction action) {
     return switch (action) {
       ActivityAction.created => 'Created',
       ActivityAction.titleEdited => 'Title edited',

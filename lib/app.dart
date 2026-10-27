@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:todo/core/theme/app_theme.dart';
+import 'package:todo/features/activity/ui/history_screen.dart';
 import 'package:todo/features/settings/providers/settings_providers.dart';
 import 'package:todo/features/settings/ui/settings_screen.dart';
 import 'package:todo/features/tasks/ui/home_screen.dart';
@@ -34,6 +35,7 @@ class _RootShellState extends State<RootShell> {
 
   static const pages = [
     HomeScreen(),
+    HistoryScreen(),
     SettingsScreen(),
   ];
 
@@ -46,6 +48,7 @@ class _RootShellState extends State<RootShell> {
         onDestinationSelected: (value) => setState(() => _index = value),
         destinations: const [
           NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
+          NavigationDestination(icon: Icon(Icons.history_outlined), selectedIcon: Icon(Icons.history), label: 'History'),
           NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: 'Settings'),
         ],
       ),
