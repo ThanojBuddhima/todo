@@ -17,6 +17,24 @@ enum ActivityAction {
 }
 
 extension ActivityActionX on ActivityAction {
+  String get label => switch (this) {
+    ActivityAction.created => 'Created',
+    ActivityAction.titleEdited => 'Title edited',
+    ActivityAction.notesEdited => 'Notes edited',
+    ActivityAction.dueDateChanged => 'Due date changed',
+    ActivityAction.priorityChanged => 'Priority changed',
+    ActivityAction.categoryChanged => 'Category changed',
+    ActivityAction.completed => 'Completed',
+    ActivityAction.reopened => 'Reopened',
+    ActivityAction.subtaskAdded => 'Subtask added',
+    ActivityAction.subtaskCompleted => 'Subtask completed',
+    ActivityAction.subtaskDeleted => 'Subtask deleted',
+    ActivityAction.reminderSet => 'Reminder set',
+    ActivityAction.reminderCleared => 'Reminder cleared',
+    ActivityAction.deleted => 'Deleted',
+    ActivityAction.restored => 'Restored',
+  };
+
   int get value {
     switch (this) {
       case ActivityAction.created:

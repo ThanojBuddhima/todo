@@ -79,7 +79,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: ChoiceChip(
                       key: ValueKey('history-action-filter-${action.value}'),
-                      label: Text(TimelineTile.labelFor(action)),
+                      label: Text(action.label),
                       selected: _actionFilter == action,
                       onSelected: (_) => setState(() => _actionFilter = action),
                     ),

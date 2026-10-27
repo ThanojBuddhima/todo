@@ -291,7 +291,7 @@ flutter build apk --release --split-per-abi
 Every box below is one unit of work. Tick `[x]` as it lands. Sections 0–10 above are the
 spec these tasks implement — the checklist is the only place that tracks progress.
 
-**Progress:** 47 / 132 done · current milestone: M7
+**Progress:** 55 / 132 done · current milestone: M7
 
 ### M0 — Environment and project setup
 
@@ -398,14 +398,14 @@ spec these tasks implement — the checklist is the only place that tracks progr
 - [ ] Load embedded Inter fonts for the PDF renderer
 - [x] `pdf_report_builder.dart` skeleton — `MultiPage`, pure data in / `Uint8List` out
 - [x] Cover block — app name, title, range, generated timestamp
-- [ ] Summary — created / completed / deleted, completion rate, busiest day
-- [ ] Per-category breakdown bars drawn with `pdf` primitives
-- [ ] Activity table with repeating header + zebra rows
-- [ ] Action chips colored per action type
-- [ ] Per-task appendix section (toggleable)
-- [ ] Footer — page X of Y + "Generated offline on-device"
-- [ ] `export_service.dart` — range → query → build → write to app documents dir
-- [ ] Filename format `activity-report-YYYYMMDD-HHmm.pdf`
+- [x] Summary — created / completed / deleted, completion rate, busiest day
+- [x] Per-category breakdown bars drawn with `pdf` primitives
+- [x] Activity table with repeating header + zebra rows
+- [x] Action chips colored per action type
+- [x] Per-task appendix section (toggleable)
+- [x] Footer — page X of Y + "Generated offline on-device"
+- [x] `export_service.dart` — range → query → build → write to app documents dir
+- [x] Filename format `activity-report-YYYYMMDD-HHmm.pdf`
 - [ ] `export_sheet.dart` — range presets + custom range
 - [ ] Export sheet: category and action-type filters
 - [ ] Export sheet: live "N activities across M tasks" count

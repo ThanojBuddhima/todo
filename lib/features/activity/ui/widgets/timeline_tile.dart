@@ -48,9 +48,10 @@ class TimelineTile extends StatelessWidget {
                           borderRadius: BorderRadius.circular(99),
                         ),
                         child: Text(
-                          labelFor(action),
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(color: color),
+                          action.label,
+                          style: Theme.of(
+                            context,
+                          ).textTheme.labelSmall?.copyWith(color: color),
                         ),
                       ),
                       Text(
@@ -112,26 +113,6 @@ class TimelineTile extends StatelessWidget {
       ActivityAction.reminderCleared => Icons.notifications_off_outlined,
       ActivityAction.deleted => Icons.delete_outline,
       ActivityAction.restored => Icons.restore,
-    };
-  }
-
-  static String labelFor(ActivityAction action) {
-    return switch (action) {
-      ActivityAction.created => 'Created',
-      ActivityAction.titleEdited => 'Title edited',
-      ActivityAction.notesEdited => 'Notes edited',
-      ActivityAction.dueDateChanged => 'Due date changed',
-      ActivityAction.priorityChanged => 'Priority changed',
-      ActivityAction.categoryChanged => 'Category changed',
-      ActivityAction.completed => 'Completed',
-      ActivityAction.reopened => 'Reopened',
-      ActivityAction.subtaskAdded => 'Subtask added',
-      ActivityAction.subtaskCompleted => 'Subtask completed',
-      ActivityAction.subtaskDeleted => 'Subtask deleted',
-      ActivityAction.reminderSet => 'Reminder set',
-      ActivityAction.reminderCleared => 'Reminder cleared',
-      ActivityAction.deleted => 'Deleted',
-      ActivityAction.restored => 'Restored',
     };
   }
 }
