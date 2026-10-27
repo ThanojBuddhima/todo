@@ -1,0 +1,27 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+.idea/
+.vscode/
+*.iml
+.mason/
+**/build/
+
+# Android release signing
+android/key.properties
+*.jks
+
+# Generated
+coverage/
+.flutter-plugins-dependencies
+
+# Local
+/.env
