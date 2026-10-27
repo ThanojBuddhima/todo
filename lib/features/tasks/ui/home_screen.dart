@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:todo/core/theme/app_colors.dart';
+import 'package:todo/core/utils/date_x.dart';
 import 'package:todo/features/tasks/domain/task.dart';
+import 'package:todo/features/tasks/domain/task_filter.dart';
 import 'package:todo/features/tasks/providers/task_providers.dart';
 import 'package:todo/features/tasks/ui/task_editor_sheet.dart';
 import 'package:todo/features/tasks/ui/widgets/filter_chips_bar.dart';
@@ -16,6 +18,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   late final TextEditingController _searchController;
+  bool _doneExpanded = false;
 
   @override
   void initState() {
@@ -31,6 +34,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final filter = ref.watch(taskFilterProvider);
     final tasksAsync = ref.watch(filteredTasksProvider);
     final theme = Theme.of(context);
     final now = DateTime.now();
@@ -81,14 +85,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 final pendingCount = tasks.where((task) => !task.isDone).length;
                 final doneCount = tasks.where((task) => task.isDone).length;
                 return ListView(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
                   children: [
                     _StatsRow(pending: pendingCount, done: doneCount),
                     const SizedBox(height: 16),
                     if (tasks.isEmpty)
                       const _EmptyState()
                     else
-                      ...tasks.map((task) => _TaskCard(task: task)),
+                      ..._taskSections(tasks, filter),
                   ],
                 );
               },
@@ -114,6 +118,99 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (hour < 12) return 'morning';
     if (hour < 18) return 'afternoon';
     return 'evening';
+  }
+
+  List<Widget> _taskSections(List<Task> tasks, TaskFilter filter) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final tomorrow = today.add(const Duration(days: 1));
+    final overdue = <Task>[];
+    final dueToday = <Task>[];
+    final dueTomorrow = <Task>[];
+    final later = <Task>[];
+    final done = <Task>[];
+
+    for (final task in tasks) {
+      if (task.isDone) {
+        done.add(task);
+        continue;
+      }
+
+      if (task.dueAt == null) {
+        later.add(task);
+        continue;
+      }
+
+      final due = DateTime.fromMillisecondsSinceEpoch(task.dueAt!);
+      if (DateX.isSameDay(due, today)) {
+        dueToday.add(task);
+      } else if (DateX.isSameDay(due, tomorrow)) {
+        dueTomorrow.add(task);
+      } else if (due.isBefore(today)) {
+        overdue.add(task);
+      } else {
+        later.add(task);
+      }
+    }
+
+    return [
+      ..._buildTaskGroup('Overdue', overdue),
+      ..._buildTaskGroup('Today', dueToday),
+      ..._buildTaskGroup('Tomorrow', dueTomorrow),
+      ..._buildTaskGroup('Later', later),
+      ..._buildTaskGroup(
+        'Done',
+        done,
+        collapsible: true,
+        expanded: filter.mode == TaskFilterMode.done || _doneExpanded,
+        onToggle: () => setState(() => _doneExpanded = !_doneExpanded),
+      ),
+    ];
+  }
+
+  List<Widget> _buildTaskGroup(
+    String title,
+    List<Task> tasks, {
+    bool collapsible = false,
+    bool expanded = true,
+    VoidCallback? onToggle,
+  }) {
+    if (tasks.isEmpty) return const [];
+
+    final header = Row(
+      children: [
+        Expanded(
+          child: Text(title, style: Theme.of(context).textTheme.titleSmall),
+        ),
+        Text('${tasks.length}', style: Theme.of(context).textTheme.labelMedium),
+        if (collapsible)
+          Tooltip(
+            message: expanded ? 'Collapse $title' : 'Expand $title',
+            child: Icon(expanded ? Icons.expand_less : Icons.expand_more),
+          ),
+      ],
+    );
+
+    return [
+      Padding(
+        padding: const EdgeInsets.only(top: 8, bottom: 8),
+        child: collapsible
+            ? Semantics(
+                button: true,
+                child: InkWell(
+                  onTap: onToggle,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: header,
+                  ),
+                ),
+              )
+            : header,
+      ),
+      if (!collapsible || expanded)
+        ...tasks.map((task) => _TaskCard(task: task)),
+    ];
   }
 }
 
