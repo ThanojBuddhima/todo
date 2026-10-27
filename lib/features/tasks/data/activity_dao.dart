@@ -35,6 +35,26 @@ class ActivityDao {
     return rows.map((row) => ActivityEntry.fromMap(row)).toList();
   }
 
+  Future<List<ActivityEntry>> getInRange({
+    required int startAtInclusive,
+    required int endAtExclusive,
+    int? limit,
+  }) async {
+    if (endAtExclusive < startAtInclusive) {
+      throw ArgumentError('The activity range end must not precede its start.');
+    }
+
+    final db = await AppDatabase.instance.database;
+    final rows = await db.query(
+      'activity_log',
+      where: 'occurred_at >= ? AND occurred_at < ?',
+      whereArgs: [startAtInclusive, endAtExclusive],
+      orderBy: 'occurred_at DESC',
+      limit: limit,
+    );
+    return rows.map((row) => ActivityEntry.fromMap(row)).toList();
+  }
+
   Future<List<ActivityEntry>> getForTask(String taskId) async {
     final db = await AppDatabase.instance.database;
     final rows = await db.query(
