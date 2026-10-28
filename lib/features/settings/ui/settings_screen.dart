@@ -1,6 +1,7 @@
 import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:todo/core/theme/app_theme.dart';
 import 'package:todo/features/security/lock_service.dart';
 import 'package:todo/features/security/providers/lock_providers.dart';
 import 'package:todo/features/settings/providers/settings_providers.dart';
@@ -31,6 +32,8 @@ class SettingsScreen extends ConsumerWidget {
                   trailing: DropdownButton<ThemeMode>(
                     value: mode,
                     underline: const SizedBox(),
+                    borderRadius: BorderRadius.circular(AppTheme.controlRadius),
+                    dropdownColor: Theme.of(context).cardTheme.color,
                     items: const [
                       DropdownMenuItem(
                         value: ThemeMode.system,

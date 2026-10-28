@@ -10,26 +10,26 @@ class AppTheme {
   static const double pillRadius = 100;
 
   static ThemeData light({Color? seed}) => _build(
-        brightness: Brightness.light,
-        seed: seed ?? AppColors.seed,
-        background: AppColors.lightBackground,
-        card: AppColors.lightCard,
-        container: AppColors.lightContainer,
-        border: AppColors.lightBorder,
-        text: AppColors.lightText,
-        muted: AppColors.lightTextMuted,
-      );
+    brightness: Brightness.light,
+    seed: seed ?? AppColors.seed,
+    background: AppColors.lightBackground,
+    card: AppColors.lightCard,
+    container: AppColors.lightContainer,
+    border: AppColors.lightBorder,
+    text: AppColors.lightText,
+    muted: AppColors.lightTextMuted,
+  );
 
   static ThemeData dark({Color? seed}) => _build(
-        brightness: Brightness.dark,
-        seed: seed ?? AppColors.seed,
-        background: AppColors.darkBackground,
-        card: AppColors.darkCard,
-        container: AppColors.darkContainer,
-        border: AppColors.darkBorder,
-        text: AppColors.darkText,
-        muted: AppColors.darkTextMuted,
-      );
+    brightness: Brightness.dark,
+    seed: seed ?? AppColors.seed,
+    background: AppColors.darkBackground,
+    card: AppColors.darkCard,
+    container: AppColors.darkContainer,
+    border: AppColors.darkBorder,
+    text: AppColors.darkText,
+    muted: AppColors.darkTextMuted,
+  );
 
   static ThemeData _build({
     required Brightness brightness,
@@ -89,13 +89,18 @@ class AppTheme {
         iconColor: muted,
         textColor: text,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(controlRadius)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(controlRadius),
+        ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: container,
         hintStyle: textTheme.bodyMedium?.copyWith(color: muted),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(controlRadius),
           borderSide: BorderSide.none,
@@ -116,7 +121,9 @@ class AppTheme {
         showCheckmark: false,
         labelStyle: textTheme.labelLarge,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(pillRadius)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(pillRadius),
+        ),
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: background,
@@ -133,7 +140,9 @@ class AppTheme {
         iconTheme: WidgetStateProperty.resolveWith(
           (states) => IconThemeData(
             size: 22,
-            color: states.contains(WidgetState.selected) ? scheme.primary : muted,
+            color: states.contains(WidgetState.selected)
+                ? scheme.primary
+                : muted,
           ),
         ),
       ),
@@ -160,31 +169,82 @@ class AppTheme {
         backgroundColor: card,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(cardRadius)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(cardRadius),
+        ),
         titleTextStyle: textTheme.titleLarge,
         contentTextStyle: textTheme.bodyMedium?.copyWith(color: muted),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: brightness == Brightness.dark ? AppColors.darkContainer : AppColors.lightText,
+        backgroundColor: brightness == Brightness.dark
+            ? AppColors.darkContainer
+            : AppColors.lightText,
         contentTextStyle: textTheme.bodyMedium?.copyWith(
-          color: brightness == Brightness.dark ? AppColors.darkText : Colors.white,
+          color: brightness == Brightness.dark
+              ? AppColors.darkText
+              : Colors.white,
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(controlRadius)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(controlRadius),
+        ),
         elevation: 0,
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           textStyle: textTheme.labelLarge,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(controlRadius)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(controlRadius),
+          ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           textStyle: textTheme.labelLarge,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(controlRadius)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(controlRadius),
+          ),
         ),
+      ),
+      // DropdownButton draws its own menu and only honours the radius passed to
+      // the widget, so call sites set `borderRadius` as well; these cover the
+      // menu surfaces the framework themes for us.
+      dropdownMenuTheme: DropdownMenuThemeData(
+        menuStyle: MenuStyle(
+          backgroundColor: WidgetStatePropertyAll(card),
+          surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+          elevation: const WidgetStatePropertyAll(0),
+          side: WidgetStatePropertyAll(hairline),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(controlRadius),
+            ),
+          ),
+        ),
+      ),
+      menuTheme: MenuThemeData(
+        style: MenuStyle(
+          backgroundColor: WidgetStatePropertyAll(card),
+          surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+          elevation: const WidgetStatePropertyAll(0),
+          side: WidgetStatePropertyAll(hairline),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(controlRadius),
+            ),
+          ),
+        ),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: card,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(controlRadius),
+          side: hairline,
+        ),
+        textStyle: textTheme.bodyMedium,
       ),
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: SegmentedButton.styleFrom(
@@ -194,7 +254,9 @@ class AppTheme {
           foregroundColor: muted,
           side: BorderSide.none,
           textStyle: textTheme.labelLarge,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(controlRadius)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(controlRadius),
+          ),
         ),
       ),
     );

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:animations/animations.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
+import 'package:todo/core/theme/app_theme.dart';
 import 'package:todo/core/theme/app_colors.dart';
 import 'package:todo/core/theme/motion.dart';
 import 'package:todo/core/utils/date_x.dart';
@@ -13,7 +14,7 @@ import 'package:todo/features/tasks/providers/task_providers.dart';
 import 'package:todo/features/tasks/ui/task_detail_screen.dart';
 import 'package:todo/features/tasks/ui/task_editor_sheet.dart';
 import 'package:todo/features/tasks/ui/widgets/empty_state.dart';
-import 'package:todo/features/tasks/ui/widgets/filter_chips_bar.dart';
+import 'package:todo/features/tasks/ui/widgets/filter_sheet.dart';
 import 'package:todo/features/tasks/ui/widgets/stat_row.dart';
 import 'package:todo/features/tasks/ui/widgets/staggered_task_entrance.dart';
 import 'package:todo/features/tasks/ui/widgets/task_card.dart';
@@ -39,6 +40,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _openEditor(BuildContext context) {
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (context) => const TaskEditorSheet(),
+    );
   }
 
   @override
@@ -68,27 +78,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (value) =>
-                  ref.read(taskFilterProvider.notifier).setQuery(value),
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search),
-                hintText: 'Search tasks',
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          ref.read(taskFilterProvider.notifier).setQuery('');
-                        },
-                      )
-                    : null,
-              ),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (value) =>
+                        ref.read(taskFilterProvider.notifier).setQuery(value),
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.search),
+                      hintText: 'Search tasks',
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                _searchController.clear();
+                                ref
+                                    .read(taskFilterProvider.notifier)
+                                    .setQuery('');
+                              },
+                            )
+                          : null,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                const FilterButton(),
+              ],
             ),
           ),
-          const FilterChipsBar(),
           Expanded(
             child: tasksAsync.when(
               data: (tasks) {
@@ -114,28 +133,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
       ),
-      floatingActionButton: OpenContainer<void>(
-        transitionDuration: AppMotion.duration(context, AppMotion.base),
-        closedColor: theme.colorScheme.primary,
-        openColor: theme.scaffoldBackgroundColor,
-        closedElevation: 6,
-        openElevation: 0,
-        closedShape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(16)),
-        ),
-        openBuilder: (context, closeContainer) => Scaffold(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          body: Align(
-            alignment: Alignment.bottomCenter,
-            child: const TaskEditorSheet(),
-          ),
-        ),
-        closedBuilder: (context, openContainer) =>
-            FloatingActionButton.extended(
-              onPressed: openContainer,
-              icon: const Icon(Icons.add),
-              label: const Text('Add task'),
-            ),
+      // A modal sheet rather than a full page: the editor is a bottom sheet, and
+      // hosting it in a full-screen route left the area above it empty instead
+      // of showing the task list behind a scrim.
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _openEditor(context),
+        icon: const Icon(Icons.add),
+        label: const Text('Add task'),
       ),
     );
   }
@@ -261,75 +265,89 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
   @override
   Widget build(BuildContext context) {
     final task = widget.task;
+    final card = _isExiting
+        ? const SizedBox.shrink()
+        : _slidable(context, task);
+    // A zero-duration AnimatedSize re-dirties its own layout when the child
+    // resizes, so under reduced motion the card is returned unwrapped.
+    if (AppMotion.reduced(context)) return card;
     return AnimatedSize(
-      duration: AppMotion.duration(context, AppMotion.base),
+      duration: AppMotion.base,
       curve: AppMotion.emphasized,
       alignment: Alignment.topCenter,
-      child: _isExiting
-          ? const SizedBox.shrink()
-          : Slidable(
-              key: ValueKey('slidable-${task.id}'),
-              startActionPane: ActionPane(
-                motion: const DrawerMotion(),
-                extentRatio: 0.25,
-                children: [
-                  SlidableAction(
-                    onPressed: (_) => _toggleTask(),
-                    backgroundColor: AppColors.done,
-                    foregroundColor: Colors.white,
-                    icon: task.isDone ? Icons.undo : Icons.check,
-                    label: task.isDone ? 'Reopen' : 'Complete',
+      child: card,
+    );
+  }
+
+  Widget _slidable(BuildContext context, Task task) {
+    // The action panes are drawn behind the card, so they are clipped to the
+    // same radius; otherwise their square corners show through the card's
+    // rounded ones. The gap between rows sits outside the clip.
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppTheme.cardRadius),
+        child: Slidable(
+          key: ValueKey('slidable-${task.id}'),
+          startActionPane: ActionPane(
+            motion: const BehindMotion(),
+            extentRatio: 0.25,
+            children: [
+              SlidableAction(
+                onPressed: (_) => _toggleTask(),
+                backgroundColor: AppColors.done,
+                foregroundColor: Colors.white,
+                icon: task.isDone ? Icons.undo : Icons.check,
+                label: task.isDone ? 'Reopen' : 'Complete',
+              ),
+            ],
+          ),
+          endActionPane: ActionPane(
+            motion: const BehindMotion(),
+            extentRatio: 0.25,
+            children: [
+              SlidableAction(
+                onPressed: (_) => _deleteTask(context),
+                backgroundColor: Theme.of(context).colorScheme.error,
+                foregroundColor: Theme.of(context).colorScheme.onError,
+                icon: Icons.delete_outline,
+                label: 'Delete',
+              ),
+            ],
+          ),
+          child: TaskCard(
+            task: task,
+            onTap: () async {
+              final deletedTaskId = await Navigator.of(context).push<String>(
+                PageRouteBuilder<String>(
+                  transitionDuration: AppMotion.duration(
+                    context,
+                    AppMotion.base,
                   ),
-                ],
-              ),
-              endActionPane: ActionPane(
-                motion: const DrawerMotion(),
-                extentRatio: 0.25,
-                children: [
-                  SlidableAction(
-                    onPressed: (_) => _deleteTask(context),
-                    backgroundColor: Theme.of(context).colorScheme.error,
-                    foregroundColor: Theme.of(context).colorScheme.onError,
-                    icon: Icons.delete_outline,
-                    label: 'Delete',
+                  reverseTransitionDuration: AppMotion.duration(
+                    context,
+                    AppMotion.base,
                   ),
-                ],
-              ),
-              child: TaskCard(
-                task: task,
-                onTap: () async {
-                  final deletedTaskId = await Navigator.of(context)
-                      .push<String>(
-                        PageRouteBuilder<String>(
-                          transitionDuration: AppMotion.duration(
-                            context,
-                            AppMotion.base,
+                  pageBuilder: (context, animation, secondaryAnimation) =>
+                      TaskDetailScreen(taskId: task.id),
+                  transitionsBuilder:
+                      (context, animation, secondaryAnimation, child) =>
+                          SharedAxisTransition(
+                            animation: animation,
+                            secondaryAnimation: secondaryAnimation,
+                            transitionType: SharedAxisTransitionType.scaled,
+                            child: child,
                           ),
-                          reverseTransitionDuration: AppMotion.duration(
-                            context,
-                            AppMotion.base,
-                          ),
-                          pageBuilder:
-                              (context, animation, secondaryAnimation) =>
-                                  TaskDetailScreen(taskId: task.id),
-                          transitionsBuilder:
-                              (context, animation, secondaryAnimation, child) =>
-                                  SharedAxisTransition(
-                                    animation: animation,
-                                    secondaryAnimation: secondaryAnimation,
-                                    transitionType:
-                                        SharedAxisTransitionType.scaled,
-                                    child: child,
-                                  ),
-                        ),
-                      );
-                  if (deletedTaskId != null && context.mounted) {
-                    await _showUndo(context, deletedTaskId);
-                  }
-                },
-                onToggle: (_) => _toggleTask(),
-              ),
-            ),
+                ),
+              );
+              if (deletedTaskId != null && context.mounted) {
+                await _showUndo(context, deletedTaskId);
+              }
+            },
+            onToggle: (_) => _toggleTask(),
+          ),
+        ),
+      ),
     );
   }
 

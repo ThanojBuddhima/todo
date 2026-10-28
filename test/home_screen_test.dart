@@ -47,6 +47,12 @@ void main() {
 
     expect(find.text('Overdue'), findsOneWidget);
     expect(find.text('Today'), findsAtLeastNWidgets(2));
+    // Cards carry an inline subtask row, so later groups start below the fold.
+    await tester.scrollUntilVisible(
+      find.text('Tomorrow'),
+      200,
+      scrollable: find.byType(Scrollable).last,
+    );
     expect(find.text('Tomorrow'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text('Later'),
@@ -56,12 +62,14 @@ void main() {
     expect(find.text('Later'), findsOneWidget);
     expect(find.text('Completed sample'), findsNothing);
 
+    // 'Done' now appears only as the group header; it used to also be a filter
+    // chip, which is why this finder could take `.last` before scrolling.
     await tester.scrollUntilVisible(
-      find.text('Done').last,
+      find.text('Done'),
       200,
       scrollable: find.byType(Scrollable).last,
     );
-    await tester.tap(find.text('Done').last);
+    await tester.tap(find.text('Done'));
     await tester.pumpAndSettle();
 
     expect(find.text('Completed sample'), findsOneWidget);

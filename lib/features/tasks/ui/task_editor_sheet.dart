@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart' show PlatformException;
 import 'package:intl/intl.dart';
+import 'package:todo/core/theme/app_theme.dart';
 import 'package:todo/features/reminders/notification_service.dart';
 import 'package:todo/features/tasks/data/task_dao.dart';
 import 'package:todo/features/tasks/domain/priority.dart';
@@ -136,6 +137,10 @@ class _TaskEditorSheetState extends ConsumerState<TaskEditorSheet> {
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<String>(
+                        borderRadius: BorderRadius.circular(
+                          AppTheme.controlRadius,
+                        ),
+                        dropdownColor: Theme.of(context).cardTheme.color,
                         initialValue:
                             categories.any(
                               (category) => category.id == categoryId,
@@ -170,6 +175,10 @@ class _TaskEditorSheetState extends ConsumerState<TaskEditorSheet> {
               ),
               const SizedBox(height: 12),
               SegmentedButton<Priority>(
+                // The selected segment would otherwise gain a check icon and
+                // widen, pushing the other two; without it the three keep the
+                // same widths whatever is selected.
+                showSelectedIcon: false,
                 segments: const [
                   ButtonSegment(value: Priority.low, label: Text('Low')),
                   ButtonSegment(value: Priority.medium, label: Text('Medium')),

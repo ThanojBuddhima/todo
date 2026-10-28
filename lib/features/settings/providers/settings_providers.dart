@@ -28,19 +28,26 @@ class ThemeModeController extends StateNotifier<ThemeMode> {
   }
 }
 
-final themeModeProvider = StateNotifierProvider<ThemeModeController, ThemeMode>((ref) {
-  return ThemeModeController();
-});
+final themeModeProvider = StateNotifierProvider<ThemeModeController, ThemeMode>(
+  (ref) {
+    return ThemeModeController();
+  },
+);
 
 // Accent seed options — a small curated palette.
 const accentSeeds = <Color>[
-  Color(0xFF6C5CE7), // indigo-violet (default)
-  Color(0xFF0EA5E9), // sky blue
+  Color(0xFF3B82F6), // blue (default)
+  Color(0xFF06B6D4), // cyan
   Color(0xFF10B981), // emerald
   Color(0xFFF59E0B), // amber
-  Color(0xFFEF4444), // red
   Color(0xFFEC4899), // pink
+  Color(0xFF8B5CF6), // violet
 ];
+
+/// The violet that used to be the default. Installs still carrying it as a
+/// stored preference are moved to the new blue default once; anything else the
+/// user picked deliberately is left alone.
+const _legacyDefaultSeed = Color(0xFF6C5CE7);
 
 class AccentSeedController extends StateNotifier<Color> {
   AccentSeedController() : super(accentSeeds[0]) {
@@ -50,7 +57,15 @@ class AccentSeedController extends StateNotifier<Color> {
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
     final value = prefs.getInt('accent_seed');
-    if (value != null) state = Color(value & 0xFFFFFFFF);
+    if (value == null) return;
+    final stored = Color(value & 0xFFFFFFFF);
+    if (stored == _legacyDefaultSeed &&
+        !(prefs.getBool('accent_seed_migrated') ?? false)) {
+      await prefs.setBool('accent_seed_migrated', true);
+      await setSeed(accentSeeds[0]);
+      return;
+    }
+    state = stored;
   }
 
   Future<void> setSeed(Color color) async {
@@ -60,6 +75,8 @@ class AccentSeedController extends StateNotifier<Color> {
   }
 }
 
-final accentSeedProvider = StateNotifierProvider<AccentSeedController, Color>((ref) {
+final accentSeedProvider = StateNotifierProvider<AccentSeedController, Color>((
+  ref,
+) {
   return AccentSeedController();
 });

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:todo/core/theme/app_theme.dart';
 import 'package:todo/features/activity/providers/activity_providers.dart';
 import 'package:todo/features/export/export_service.dart';
 import 'package:todo/features/tasks/domain/activity_action.dart';
@@ -36,7 +37,9 @@ class _ExportSheetState extends ConsumerState<ExportSheet> {
     final range = _selectedRange();
     final activityRange = (
       startAtInclusive: range.start.millisecondsSinceEpoch,
-      endAtExclusive: range.end.add(const Duration(days: 1)).millisecondsSinceEpoch,
+      endAtExclusive: range.end
+          .add(const Duration(days: 1))
+          .millisecondsSinceEpoch,
     );
     final activityAsync = ref.watch(activityRangeProvider(activityRange));
     final categories = categoriesAsync.valueOrNull;
@@ -75,6 +78,8 @@ class _ExportSheetState extends ConsumerState<ExportSheet> {
                 children: [
                   DropdownButtonFormField<_ExportRangePreset>(
                     key: const ValueKey('export-range-preset'),
+                    borderRadius: BorderRadius.circular(AppTheme.controlRadius),
+                    dropdownColor: Theme.of(context).cardTheme.color,
                     initialValue: _rangePreset,
                     decoration: const InputDecoration(labelText: 'Date range'),
                     items: const [
@@ -146,9 +151,8 @@ class _ExportSheetState extends ConsumerState<ExportSheet> {
                         );
                       },
                       loading: () => const Text('Counting activities...'),
-                      error: (error, stackTrace) => Text(
-                        'Could not count activities: $error',
-                      ),
+                      error: (error, stackTrace) =>
+                          Text('Could not count activities: $error'),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -234,7 +238,9 @@ class _ExportSheetState extends ConsumerState<ExportSheet> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.picture_as_pdf_outlined),
-                  label: Text(_isExporting ? 'Generating report' : 'Export PDF'),
+                  label: Text(
+                    _isExporting ? 'Generating report' : 'Export PDF',
+                  ),
                 ),
               ),
             ),
@@ -249,12 +255,8 @@ class _ExportSheetState extends ConsumerState<ExportSheet> {
     final start = switch (_rangePreset) {
       _ExportRangePreset.allTime => DateTime(1970),
       _ExportRangePreset.last7Days => today.subtract(const Duration(days: 6)),
-      _ExportRangePreset.last30Days => today.subtract(
-        const Duration(days: 29),
-      ),
-      _ExportRangePreset.last90Days => today.subtract(
-        const Duration(days: 89),
-      ),
+      _ExportRangePreset.last30Days => today.subtract(const Duration(days: 29)),
+      _ExportRangePreset.last90Days => today.subtract(const Duration(days: 89)),
       _ExportRangePreset.custom =>
         _customRange?.start ?? today.subtract(const Duration(days: 29)),
     };

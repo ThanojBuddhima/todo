@@ -115,7 +115,9 @@ class PdfReportBuilder {
           );
     final categories = summary.categoryActivityCounts.entries.toList()
       ..sort((left, right) => right.value.compareTo(left.value));
-    final largestCategoryCount = categories.isEmpty ? 0 : categories.first.value;
+    final largestCategoryCount = categories.isEmpty
+        ? 0
+        : categories.first.value;
     final summaryRows = [
       ('Created', summary.created.toString()),
       ('Completed', summary.completed.toString()),
@@ -176,10 +178,7 @@ class PdfReportBuilder {
           pw.SizedBox(height: 32),
           pw.Text(
             'Activity report',
-            style: pw.TextStyle(
-              fontSize: 28,
-              fontWeight: pw.FontWeight.bold,
-            ),
+            style: pw.TextStyle(fontSize: 28, fontWeight: pw.FontWeight.bold),
           ),
           pw.SizedBox(height: 12),
           pw.Text(
@@ -201,10 +200,7 @@ class PdfReportBuilder {
           pw.SizedBox(height: 24),
           pw.Text(
             'Summary',
-            style: pw.TextStyle(
-              fontSize: 18,
-              fontWeight: pw.FontWeight.bold,
-            ),
+            style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
           ),
           pw.SizedBox(height: 10),
           for (final row in summaryRows)
@@ -220,10 +216,7 @@ class PdfReportBuilder {
           pw.SizedBox(height: 24),
           pw.Text(
             'Activity by category',
-            style: pw.TextStyle(
-              fontSize: 18,
-              fontWeight: pw.FontWeight.bold,
-            ),
+            style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
           ),
           pw.SizedBox(height: 10),
           if (categories.isEmpty)
@@ -256,10 +249,7 @@ class PdfReportBuilder {
           pw.SizedBox(height: 24),
           pw.Text(
             'Activity log',
-            style: pw.TextStyle(
-                fontSize: 18,
-                fontWeight: pw.FontWeight.bold,
-            ),
+            style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
           ),
           pw.SizedBox(height: 10),
           pw.TableHelper.fromTextArray(
@@ -267,73 +257,69 @@ class PdfReportBuilder {
             data: activityRows,
             headerHeight: 24,
             cellPadding: const pw.EdgeInsets.symmetric(
-                horizontal: 5,
-                vertical: 4,
+              horizontal: 5,
+              vertical: 4,
             ),
             headerStyle: pw.TextStyle(
-                color: PdfColors.white,
-                fontSize: 9,
-                fontWeight: pw.FontWeight.bold,
+              color: PdfColors.white,
+              fontSize: 9,
+              fontWeight: pw.FontWeight.bold,
             ),
             headerDecoration: const pw.BoxDecoration(
-                color: PdfColors.deepPurple,
+              color: PdfColors.deepPurple,
             ),
             cellStyle: const pw.TextStyle(fontSize: 8),
             rowDecoration: const pw.BoxDecoration(color: PdfColors.grey100),
             oddRowDecoration: const pw.BoxDecoration(color: PdfColors.white),
             border: pw.TableBorder(
-                horizontalInside: pw.BorderSide(
-                  color: PdfColors.grey300,
-                  width: 0.5,
-                ),
+              horizontalInside: pw.BorderSide(
+                color: PdfColors.grey300,
+                width: 0.5,
+              ),
             ),
             columnWidths: {
-                0: const pw.FixedColumnWidth(82),
-                1: const pw.FixedColumnWidth(90),
-                2: const pw.FlexColumnWidth(2),
-                3: const pw.FlexColumnWidth(2),
+              0: const pw.FixedColumnWidth(82),
+              1: const pw.FixedColumnWidth(90),
+              2: const pw.FlexColumnWidth(2),
+              3: const pw.FlexColumnWidth(2),
             },
-            cellFormat: (index, cell) => cell is ActivityAction
-                  ? cell.label
-                  : cell.toString(),
+            cellFormat: (index, cell) =>
+                cell is ActivityAction ? cell.label : cell.toString(),
             cellBuilder: (index, cell, rowNum) {
-                if (index != 1 || cell is! ActivityAction) return null;
-                return pw.Text(
-                  cell.label,
-                  style: pw.TextStyle(
-                    color: _actionColor(cell),
-                    fontSize: 8,
-                    fontWeight: pw.FontWeight.bold,
-                  ),
-                );
+              if (index != 1 || cell is! ActivityAction) return null;
+              return pw.Text(
+                cell.label,
+                style: pw.TextStyle(
+                  color: _actionColor(cell),
+                  fontSize: 8,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              );
             },
           ),
           if (appendixGroups.isNotEmpty) ...[
             pw.NewPage(),
             pw.Text(
-                'Per-task appendix',
-                style: pw.TextStyle(
-                  fontSize: 20,
-                  fontWeight: pw.FontWeight.bold,
-                ),
+              'Per-task appendix',
+              style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 12),
             for (final group in appendixGroups.entries) ...[
-                pw.Text(
-                  group.value.first.taskTitle,
-                  style: pw.TextStyle(
-                    fontSize: 13,
-                    fontWeight: pw.FontWeight.bold,
-                  ),
+              pw.Text(
+                group.value.first.taskTitle,
+                style: pw.TextStyle(
+                  fontSize: 13,
+                  fontWeight: pw.FontWeight.bold,
                 ),
-                for (final entry in group.value)
-                  pw.Bullet(
-                    text:
-                        '${ActivityActionX.fromValue(entry.action).label} - '
-                        '${dateTimeFormat.format(DateTime.fromMillisecondsSinceEpoch(entry.occurredAt))}',
-                    style: const pw.TextStyle(fontSize: 9),
-                  ),
-                pw.SizedBox(height: 8),
+              ),
+              for (final entry in group.value)
+                pw.Bullet(
+                  text:
+                      '${ActivityActionX.fromValue(entry.action).label} - '
+                      '${dateTimeFormat.format(DateTime.fromMillisecondsSinceEpoch(entry.occurredAt))}',
+                  style: const pw.TextStyle(fontSize: 9),
+                ),
+              pw.SizedBox(height: 8),
             ],
           ],
         ],
@@ -353,8 +339,7 @@ class PdfReportBuilder {
       ActivityAction.completed ||
       ActivityAction.restored ||
       ActivityAction.subtaskCompleted => PdfColors.green,
-      ActivityAction.deleted ||
-      ActivityAction.subtaskDeleted => PdfColors.red,
+      ActivityAction.deleted || ActivityAction.subtaskDeleted => PdfColors.red,
       ActivityAction.reminderSet ||
       ActivityAction.reminderCleared => PdfColors.orange,
       _ => PdfColors.blue,

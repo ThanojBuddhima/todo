@@ -22,6 +22,7 @@ class _StaggeredTaskEntranceState extends State<StaggeredTaskEntrance>
   late final AnimationController _controller;
   late final Animation<double> _opacity;
   late final Animation<Offset> _offset;
+  late final Animation<double> _scale;
   Timer? _delay;
   bool? _reducedMotion;
 
@@ -31,13 +32,19 @@ class _StaggeredTaskEntranceState extends State<StaggeredTaskEntrance>
     _controller = AnimationController(vsync: this, duration: AppMotion.slow);
     final animation = CurvedAnimation(
       parent: _controller,
-      curve: AppMotion.emphasized,
+      curve: AppMotion.entrance,
     );
-    _opacity = animation;
+    // Fade finishes ahead of the travel so the card is already legible while it
+    // is still settling, which hides the tail of the slide.
+    _opacity = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0, 0.65, curve: Curves.easeOut),
+    );
     _offset = Tween<Offset>(
-      begin: const Offset(0, 0.08),
+      begin: const Offset(0, 0.06),
       end: Offset.zero,
     ).animate(animation);
+    _scale = Tween<double>(begin: 0.97, end: 1).animate(animation);
   }
 
   @override
@@ -50,7 +57,8 @@ class _StaggeredTaskEntranceState extends State<StaggeredTaskEntrance>
       _delay?.cancel();
       _controller.value = 1;
     } else {
-      final delayMilliseconds = widget.index.clamp(0, 9).toInt() * 40;
+      final delayMilliseconds =
+          widget.index.clamp(0, 9).toInt() * AppMotion.stagger.inMilliseconds;
       _delay = Timer(Duration(milliseconds: delayMilliseconds), () {
         if (mounted) _controller.forward();
       });
@@ -71,7 +79,10 @@ class _StaggeredTaskEntranceState extends State<StaggeredTaskEntrance>
     }
     return FadeTransition(
       opacity: _opacity,
-      child: SlideTransition(position: _offset, child: widget.child),
+      child: SlideTransition(
+        position: _offset,
+        child: ScaleTransition(scale: _scale, child: widget.child),
+      ),
     );
   }
 }

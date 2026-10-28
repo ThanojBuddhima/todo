@@ -1,4 +1,3 @@
-import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:todo/core/theme/app_theme.dart';
@@ -29,7 +28,9 @@ class App extends ConsumerWidget {
       darkTheme: AppTheme.dark(seed: seed),
       themeMode: themeMode,
       // MaterialApp drives the theme swap through AnimatedTheme internally.
-      themeAnimationDuration: AppMotion.platformReduced ? Duration.zero : AppMotion.themeCrossFade,
+      themeAnimationDuration: AppMotion.platformReduced
+          ? Duration.zero
+          : AppMotion.themeCrossFade,
       themeAnimationCurve: AppMotion.emphasized,
       home: const LockGate(child: RootShell()),
     );
@@ -115,7 +116,9 @@ class RootShell extends StatefulWidget {
 
 class _RootShellState extends State<RootShell> {
   int _index = 0;
-  int _previousIndex = 0;
+  late final PageController _pageController = PageController(
+    initialPage: _index,
+  );
 
   static const pages = [HomeScreen(), HistoryScreen(), SettingsScreen()];
 
@@ -128,7 +131,22 @@ class _RootShellState extends State<RootShell> {
   @override
   void dispose() {
     NotificationService.instance.setTaskTapHandler(null);
+    _pageController.dispose();
     super.dispose();
+  }
+
+  void _selectTab(int value) {
+    if (value == _index) return;
+    setState(() => _index = value);
+    if (AppMotion.reduced(context)) {
+      _pageController.jumpToPage(value);
+    } else {
+      _pageController.animateToPage(
+        value,
+        duration: AppMotion.base,
+        curve: AppMotion.standard,
+      );
+    }
   }
 
   void _openTaskFromNotification(String taskId) {
@@ -148,38 +166,32 @@ class _RootShellState extends State<RootShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: PageTransitionSwitcher(
-        duration: AppMotion.duration(context, AppMotion.base),
-        reverse: _index < _previousIndex,
-        transitionBuilder: (child, animation, secondaryAnimation) => SharedAxisTransition(
-          animation: animation,
-          secondaryAnimation: secondaryAnimation,
-          transitionType: SharedAxisTransitionType.horizontal,
-          fillColor: Colors.transparent,
-          child: child,
-        ),
-        child: KeyedSubtree(key: ValueKey(_index), child: pages[_index]),
+      // A PageView so tabs can be swiped as well as tapped; the nav bar and the
+      // page position stay in sync in both directions.
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (value) => setState(() => _index = value),
+        children: pages,
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
-        onDestinationSelected: (value) => setState(() {
-          _previousIndex = _index;
-          _index = value;
-        }),
+        onDestinationSelected: _selectTab,
         destinations: const [
+          // Light outlines when idle, the rounded weight when selected — the
+          // rounded set matches the app's radii and keeps the bar quiet.
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
+            selectedIcon: Icon(Icons.home_rounded),
             label: 'Home',
           ),
           NavigationDestination(
             icon: Icon(Icons.history_outlined),
-            selectedIcon: Icon(Icons.history),
+            selectedIcon: Icon(Icons.history_rounded),
             label: 'History',
           ),
           NavigationDestination(
             icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
+            selectedIcon: Icon(Icons.settings_rounded),
             label: 'Settings',
           ),
         ],

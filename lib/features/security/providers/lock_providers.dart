@@ -11,4 +11,6 @@ class LockEnabledNotifier extends AsyncNotifier<bool> {
   }
 }
 
-final lockEnabledProvider = AsyncNotifierProvider<LockEnabledNotifier, bool>(LockEnabledNotifier.new);
+final lockEnabledProvider = AsyncNotifierProvider<LockEnabledNotifier, bool>(
+  LockEnabledNotifier.new,
+);

@@ -262,7 +262,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             delegate: _DayHeaderDelegate(date: group.key),
           ),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, index) => TimelineTile(entry: group.value[index]),
@@ -281,11 +281,15 @@ class _DayHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   final DateTime date;
 
-  @override
-  double get minExtent => 40;
+  /// Matches the 16px gutter the tiles below use, so the header and the cards
+  /// share one left edge.
+  static const double _gutter = 16;
 
   @override
-  double get maxExtent => 40;
+  double get minExtent => 48;
+
+  @override
+  double get maxExtent => 48;
 
   @override
   Widget build(
@@ -295,11 +299,16 @@ class _DayHeaderDelegate extends SliverPersistentHeaderDelegate {
   ) {
     return ColoredBox(
       color: Theme.of(context).scaffoldBackgroundColor,
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          DateFormat.yMMMMEEEEd().format(date),
-          style: Theme.of(context).textTheme.titleSmall,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(_gutter, 10, _gutter, 6),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            DateFormat.yMMMMEEEEd().format(date),
+            style: Theme.of(context).textTheme.titleSmall,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       ),
     );

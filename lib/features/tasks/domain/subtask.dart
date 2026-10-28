@@ -22,7 +22,8 @@ class Subtask {
       title: map['title'] as String,
       isDone: (map['is_done'] as int? ?? 0) == 1,
       sortIndex: (map['sort_index'] as num?)?.toDouble() ?? 0,
-      createdAt: map['created_at'] as int? ?? DateTime.now().millisecondsSinceEpoch,
+      createdAt:
+          map['created_at'] as int? ?? DateTime.now().millisecondsSinceEpoch,
     );
   }
 

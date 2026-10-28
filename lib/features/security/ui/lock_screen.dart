@@ -100,7 +100,11 @@ class _LockScreenState extends State<LockScreen> {
             if (_error.isNotEmpty)
               Text(_error, style: TextStyle(color: cs.error, fontSize: 13)),
             const SizedBox(height: 32),
-            _Numpad(onDigit: _onDigit, onDelete: _onDelete, onBiometric: _tryBiometrics),
+            _Numpad(
+              onDigit: _onDigit,
+              onDelete: _onDelete,
+              onBiometric: _tryBiometrics,
+            ),
             const Spacer(),
           ],
         ),
@@ -139,10 +143,7 @@ class _Numpad extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _NumKey(
-              icon: Icons.fingerprint,
-              onTap: onBiometric,
-            ),
+            _NumKey(icon: Icons.fingerprint, onTap: onBiometric),
             _NumKey(label: '0', onTap: () => onDigit('0')),
             _NumKey(icon: Icons.backspace_outlined, onTap: onDelete),
           ],
@@ -174,7 +175,13 @@ class _NumKey extends StatelessWidget {
         ),
         alignment: Alignment.center,
         child: label != null
-            ? Text(label!, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w500))
+            ? Text(
+                label!,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w500,
+                ),
+              )
             : Icon(icon, size: 24, color: cs.onSurface),
       ),
     );

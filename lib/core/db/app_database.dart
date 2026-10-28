@@ -24,6 +24,7 @@ class AppDatabase {
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
+      onUpgrade: _onUpgrade,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE categories (
@@ -80,7 +81,9 @@ class AppDatabase {
           )
         ''');
 
-        await db.execute('CREATE INDEX idx_activity_time ON activity_log(occurred_at)');
+        await db.execute(
+          'CREATE INDEX idx_activity_time ON activity_log(occurred_at)',
+        );
         await db.execute('CREATE INDEX idx_tasks_due ON tasks(due_at)');
 
         await db.insert('categories', {
@@ -110,4 +113,19 @@ class AppDatabase {
       },
     );
   }
+
+  /// Runs each migration step in order, so a database several versions behind
+  /// is brought forward one step at a time rather than in a single jump.
+  /// v1 is the initial schema, so there is nothing to apply yet.
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    for (var version = oldVersion + 1; version <= newVersion; version++) {
+      final step = _migrations[version];
+      if (step == null) {
+        throw StateError('No migration registered for schema version $version');
+      }
+      await step(db);
+    }
+  }
+
+  static const Map<int, Future<void> Function(Database db)> _migrations = {};
 }

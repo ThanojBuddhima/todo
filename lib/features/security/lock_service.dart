@@ -8,9 +8,7 @@ class LockService {
   static final LockService instance = LockService._();
   LockService._();
 
-  static const _storage = FlutterSecureStorage(
-    aOptions: AndroidOptions(),
-  );
+  static const _storage = FlutterSecureStorage(aOptions: AndroidOptions());
   static const _keyHash = 'pin_hash';
   static const _keySalt = 'pin_salt';
   static const _keyEnabled = 'lock_enabled';

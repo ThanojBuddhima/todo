@@ -1,4 +1,5 @@
 import 'package:todo/core/db/app_database.dart';
+import 'package:todo/features/tasks/domain/activity_action.dart';
 import 'package:todo/features/tasks/domain/activity_entry.dart';
 
 class ActivityDao {
@@ -64,5 +65,30 @@ class ActivityDao {
       orderBy: 'occurred_at DESC',
     );
     return rows.map((row) => ActivityEntry.fromMap(row)).toList();
+  }
+
+  /// Totals per action, optionally limited to the [from] .. [to] window.
+  /// Actions with no entries are absent rather than zero.
+  Future<Map<ActivityAction, int>> countByAction({int? from, int? to}) async {
+    final db = await AppDatabase.instance.database;
+    final clauses = <String>[];
+    final args = <Object?>[];
+    if (from != null) {
+      clauses.add('occurred_at >= ?');
+      args.add(from);
+    }
+    if (to != null) {
+      clauses.add('occurred_at <= ?');
+      args.add(to);
+    }
+    final where = clauses.isEmpty ? '' : ' WHERE ${clauses.join(' AND ')}';
+    final rows = await db.rawQuery(
+      'SELECT action, COUNT(*) AS total FROM activity_log$where GROUP BY action',
+      args,
+    );
+    return {
+      for (final row in rows)
+        ActivityActionX.fromValue(row['action'] as int): row['total'] as int,
+    };
   }
 }
